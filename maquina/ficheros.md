@@ -15,6 +15,7 @@ Se generan desde `maquina/` con `instalar.sh` (ver `README.md`); no se editan a 
 | `<config>/metodo-maquina.json` | Carpetas de proyectos y reglas de una sola máquina, fuera del repo; las reglas se suman a las de la plantilla |
 | `<config>/hooks/*.sh` | Hooks de usuario, copiados de `maquina/hooks/` |
 | `<config>/*.bak-AAAAMMDD-HHMMSS` | Copias que deja `instalar.sh --sobrescribir` |
+| `~/.config/systemd/user/metodo-desatendido.{service,timer}` | Temporizador de las sesiones desatendidas, desde `maquina/desatendido/` con `instalar.sh --desatendido` (solo Linux) |
 | `~/.claude.json` | Estado de Claude Code: proyectos abiertos, servidores MCP de usuario, preferencias. Lo gestiona Claude Code |
 
 ### Plugins
@@ -55,6 +56,8 @@ Rutas de Linux; en Windows cambian de sitio. Todas las gestiona Claude Code salv
 | Ruta                                   | Qué es                                                                                                        |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `${XDG_RUNTIME_DIR:-/tmp}/dev-latido/` | Estado de `plugins/dev/scripts/latido.sh`: un fichero por sesión con los issues en curso de `/dev:resolver-issue` o `/dev:sprint` (normalmente en `/run/user/<uid>/`) |
+| `${XDG_RUNTIME_DIR:-/tmp}/metodo-desatendido/` | Un cerrojo por proyecto de `maquina/desatendido/lanzar.sh`, para que dos ejecuciones desatendidas no se solapen |
+| `~/.local/state/metodo-desatendido/` | Salida de cada sesión desatendida, un fichero por proyecto y hora; no se borra sola |
 | `/tmp/claude-eval-*/`                  | Proyecto y `HOME` de prueba de cada caso de `plugins/dev/evals/ejecutar.sh`; se borran al acabar              |
 | `plugins/dev/evals/results/`           | Resultados de los evals, dentro del repo pero ignorados por git                                               |
 | Un `mktemp -d` de `instalar.sh`        | Donde se generan los ficheros antes de compararlos con `<config>`; se borra al salir                          |
@@ -67,14 +70,14 @@ Rutas de Linux; en Windows cambian de sitio. Todas las gestiona Claude Code salv
 | `.claude-plugin/marketplace.json` | Hace de `Metodo` un marketplace de plugins |
 | `estilo/redaccion.md`, `estilo/diseno-web.md`, `estilo/proporcion.md` | Reglas de escritura, de maquetación y de esfuerzo, importadas desde el `CLAUDE.md` global |
 | `estilo/obsidian/` | Fragmento CSS común de las bóvedas de Obsidian y cómo activarlo |
-| `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario, `instalar.sh` y este mapa |
+| `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario, `instalar.sh`, las sesiones desatendidas (`desatendido/`) y este mapa |
 | `plugins/dev/README.md`, `metodologia.md`, `barridos.md` | Contrato del `## Método`, parte común de la metodología y barridos que recorre `/dev:siguiente` |
 | `plugins/dev/.claude-plugin/plugin.json`, `hooks/hooks.json` | Manifiesto del plugin y sus hooks |
 | `plugins/dev/skills/*/SKILL.md` | Skills del ciclo de desarrollo (`/dev:*`), con sus ficheros de apoyo |
 | `plugins/dev/scripts/` | Scripts que llaman los hooks y los skills (`hook-*.sh`, `latido.sh`, `metricas.sh`, `coste.sh`, `sin-subir.sh`) |
 | `plugins/dev/evals/` | Pruebas de los skills: `ejecutar.sh` y un caso por carpeta (`case.yaml` y scripts que montan el proyecto) |
 | `plugins/marketing/` | Plugin `marketing`: skill `revisar-ads` y `scripts/umami-visitas.py` |
-| `local/` | Ignorada por git: retros agregadas (`local/retros/`), tabla de proyectos de la máquina (`local/proyectos.md`) y apps modelo de la guía Streamlit (`local/streamlit.md`) |
+| `local/` | Ignorada por git: retros agregadas (`local/retros/`), tabla de proyectos de la máquina (`local/proyectos.md`) apps modelo de la guía Streamlit (`local/streamlit.md`) y barridos que un proyecto ya cumple (`local/barridos.md`) |
 | `.github/workflows/verificacion.yml` | CI reutilizable que llaman los proyectos |
 
 ## 3. Proyectos

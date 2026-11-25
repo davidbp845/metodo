@@ -1,0 +1,8 @@
+[Unit]
+Description=Sesiones desatendidas del Método: /dev:siguiente en los proyectos con algo en Ready
+
+[Service]
+Type=oneshot
+Environment=PATH={{RUTA}}
+ExecStart={{DATA_NATIVA}}/Metodo/maquina/desatendido/lanzar.sh
+TimeoutStartSec=6h

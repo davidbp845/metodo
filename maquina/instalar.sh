@@ -6,11 +6,13 @@ set -euo pipefail
 
 uso() {
   cat <<'EOF'
-Uso: maquina/instalar.sh [--comprobar | --sobrescribir]
+Uso: maquina/instalar.sh [--comprobar | --sobrescribir] [--desatendido]
 
   (sin opción)    escribe los ficheros que faltan; si uno existe y difiere, enseña el diff y para
   --comprobar     solo compara lo generado con lo instalado; sale con 1 si hay diferencias
   --sobrescribir  reemplaza los que difieren, guardando antes una copia <fichero>.bak-AAAAMMDD-HHMMSS
+  --desatendido   incluye el temporizador de systemd de las sesiones desatendidas (solo Linux),
+                  en ~/.config/systemd/user/; activarlo es aparte (lo dice al terminar)
 
 Directorio de configuración: $CLAUDE_CONFIG_DIR, o ~/.claude si no está definido.
 Reglas propias de esta máquina: <config>/metodo-maquina.json (opcional), con la forma
@@ -22,13 +24,16 @@ EOF
 }
 
 modo=instalar
-case "${1:-}" in
-  "") ;;
-  --comprobar) modo=comprobar ;;
-  --sobrescribir) modo=sobrescribir ;;
-  -h|--help) uso; exit 0 ;;
-  *) uso >&2; exit 2 ;;
-esac
+desatendido=0
+for arg in "$@"; do
+  case "$arg" in
+    --comprobar) modo=comprobar ;;
+    --sobrescribir) modo=sobrescribir ;;
+    --desatendido) desatendido=1 ;;
+    -h|--help) uso; exit 0 ;;
+    *) uso >&2; exit 2 ;;
+  esac
+done
 
 aqui=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 metodo=$(dirname "$aqui")
@@ -109,6 +114,18 @@ for h in "$aqui"/hooks/*; do
   destinos+=("hook-$(basename "$h"):$config/hooks/$(basename "$h")")
 done
 
+if [ "$desatendido" = 1 ]; then
+  command -v systemctl >/dev/null 2>&1 || { echo "--desatendido necesita systemd (solo Linux)." >&2; exit 1; }
+  command -v flock >/dev/null 2>&1 || { echo "--desatendido necesita flock." >&2; exit 1; }
+  # systemd de usuario no hereda el PATH de la shell: se fija con dónde están claude y gh.
+  ruta=$(printf '%s\n' "$(dirname "$(command -v claude)")" "$(dirname "$(command -v gh)")" /usr/local/bin /usr/bin /bin | awk '!visto[$0]++' | paste -sd:)
+  unidades=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
+  for u in metodo-desatendido.service metodo-desatendido.timer; do
+    rellenar "$aqui/desatendido/$u" | sed "s|{{RUTA}}|$ruta|g" > "$tmp/$u"
+    destinos+=("$u:$unidades/$u")
+  done
+fi
+
 # --- Comparar e instalar ---
 # settings.json se compara por contenido: Claude Code lo reescribe, cambia el orden de las claves
 # y, en Windows, guarda la ruta del marketplace con barras invertidas (F:\Data\Metodo). La ruta
@@ -157,6 +174,13 @@ if [ "$difiere" = 1 ] && [ "$modo" = instalar ]; then
   echo "Hay ficheros que difieren de la plantilla y no se han tocado." >&2
   echo "Si el cambio instalado es bueno, pásalo a maquina/ en Metodo; si no, repite con --sobrescribir." >&2
   exit 1
+fi
+
+if [ "$desatendido" = 1 ]; then
+  systemctl --user daemon-reload 2>/dev/null || true
+  if ! systemctl --user is-enabled metodo-desatendido.timer >/dev/null 2>&1; then
+    echo "Temporizador instalado, sin activar. Para activarlo: systemctl --user enable --now metodo-desatendido.timer"
+  fi
 fi
 
 # --- Plugin ---

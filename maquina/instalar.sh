@@ -176,7 +176,7 @@ if [ "$difiere" = 1 ] && [ "$modo" = instalar ]; then
   exit 1
 fi
 
-if [ "$desatendido" = 1 ]; then
+if [ "$desatendido" = 1 ] && [ "$modo" != comprobar ]; then
   systemctl --user daemon-reload 2>/dev/null || true
   if ! systemctl --user is-enabled metodo-desatendido.timer >/dev/null 2>&1; then
     echo "Temporizador instalado, sin activar. Para activarlo: systemctl --user enable --now metodo-desatendido.timer"

@@ -80,10 +80,11 @@ proyecto() {
 	fi
 
 	items=$(gh project item-list "$numero" --owner "$owner" --format json --limit 500 2>/dev/null) || { decir "$nombre" "no se pudo leer el tablero"; return; }
-	en_revision=$(printf '%s' "$items" | jq '[.items[] | select(.status == "In review")] | length')
+	en_revision=$(printf '%s' "$items" | jq '[.items[] | select(.status == "In review")] | length' 2>/dev/null)
 	ready=$(printf '%s' "$items" | jq --arg rama "$rama" --arg principal "$principal" '[.items[] | select(.status == "Ready")
 		| (.labels // [] | map(select(startswith("rama:")))) as $r
-		| select(if $rama == $principal then $r == [] else ($r | index("rama:" + $rama)) != null end)] | length')
+		| select(if $rama == $principal then $r == [] else ($r | index("rama:" + $rama)) != null end)] | length' 2>/dev/null)
+	case "${en_revision:-x}-${ready:-x}" in *[!0-9-]* | -* | *-) decir "$nombre" "no se pudo leer el tablero"; return ;; esac
 	if [ "$en_revision" -ge "$limite" ]; then decir "$nombre" "In review lleno ($en_revision de $limite)"; return; fi
 	if [ "$ready" -eq 0 ] && [ "$barridos" = 0 ]; then decir "$nombre" "nada en Ready"; return; fi
 

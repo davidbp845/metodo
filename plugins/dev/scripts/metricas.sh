@@ -22,6 +22,13 @@
 # total y por issue (cómo se atribuyen, en coste.sh); null si la máquina no tiene esos registros.
 set -u
 
+# Si coste.sh falla o no da JSON, `coste` sale null y el resto de métricas sigue.
+coste() {
+	local c
+	c=$(bash "$(dirname "$0")/coste.sh" "$carpeta" "$inicio") && printf '%s' "$c" | jq -e . >/dev/null 2>&1 || c=null
+	printf '%s' "$c"
+}
+
 carpeta=${1:?uso: metricas.sh <carpeta> <inicio AAAA-MM-DD>}
 inicio=${2:?uso: metricas.sh <carpeta> <inicio AAAA-MM-DD>}
 claude_md="$carpeta/CLAUDE.md"
@@ -57,7 +64,7 @@ if [ -n "$areas" ] && [ -z "${METRICAS_PAR+x}" ]; then
 			por_tipo: (if any(.[]; .por_tipo == null) then null else (map(.por_tipo | to_entries) | add | group_by(.key) | map({(.[0].key): (map(.value) | add)}) | add // {}) end),
 			fix_max: ([.[].fix_max | select(. != null)] | sort_by(-.fix, .issue) | .[0]),
 			repo_sin_tablero: .[0].repo_sin_tablero
-		}' | jq -c --argjson coste "$(bash "$(dirname "$0")/coste.sh" "$carpeta" "$inicio")" '. + {coste: $coste}'
+		}' | jq -c --argjson coste "$(coste)" '. + {coste: $coste}'
 	exit
 fi
 
@@ -233,4 +240,4 @@ jq -n -c \
 	+ (if $compartido then (commits_de("propio") | de_commits) else ($todos | de_commits) end)
 	+ {repo_sin_tablero: (if $compartido and $todos != null then (commits_de("repo") | de_commits) else null end)}' |
 	if [ -n "${METRICAS_PAR+x}" ]; then cat
-	else jq -c --argjson coste "$(bash "$(dirname "$0")/coste.sh" "$carpeta" "$inicio")" '. + {coste: $coste}'; fi
+	else jq -c --argjson coste "$(coste)" '. + {coste: $coste}'; fi

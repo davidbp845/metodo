@@ -63,12 +63,16 @@ reduce (inputs | select(.timestamp != null)) as $e ({clave: null, prev: null, vi
 desde=$(date -d "@$ini" '+%Y-%m-%d %H:%M:%S')
 {
 	find "$dir" -maxdepth 1 -name '*.jsonl' -newermt "$desde" 2>/dev/null | while IFS= read -r sesion; do
-		madre=$(jq -n -c --argjson sub false --argjson seg '[]' --argjson ini "$ini" "$programa" "$sesion" 2>/dev/null) || continue
+		madre=$(jq -n -c --argjson sub false --argjson seg '[]' --argjson ini "$ini" "$programa" "$sesion" 2>/dev/null) || {
+			echo "coste.sh: no se pudo leer $sesion; queda fuera del coste" >&2
+			continue
+		}
 		printf '%s\n' "$madre"
 		seg=$(printf '%s' "$madre" | jq -c .seg)
 		for agente in "${sesion%.jsonl}"/subagents/*.jsonl; do
 			[ -f "$agente" ] || continue
-			jq -n -c --argjson sub true --argjson seg "$seg" --argjson ini "$ini" "$programa" "$agente" 2>/dev/null
+			jq -n -c --argjson sub true --argjson seg "$seg" --argjson ini "$ini" "$programa" "$agente" 2>/dev/null ||
+				echo "coste.sh: no se pudo leer $agente; queda fuera del coste" >&2
 		done
 	done
 } | jq -s -c '

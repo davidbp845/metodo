@@ -25,7 +25,7 @@ Este directorio es a la vez un marketplace de plugins de Claude Code (`.claude-p
 
 ## Cómo se instala en una máquina
 
-`maquina/instalar.sh` deja una máquina nueva (Linux, o Windows con Git Bash) con el `CLAUDE.md` global, los permisos, los hooks y el plugin `dev@metodo`. Pasos y opciones en `maquina/README.md`.
+`maquina/instalar.sh` deja una máquina nueva (Linux, o Windows con Git Bash) con el `CLAUDE.md` global, los permisos, los hooks, los servidores MCP de usuario de la máquina y el plugin `dev@metodo`. Pasos y opciones en `maquina/README.md`.
 
 ## Cómo se adopta en un proyecto
 

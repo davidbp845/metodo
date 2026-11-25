@@ -21,7 +21,7 @@ Las plantillas no llevan rutas de una máquina: `{{DATA}}` es la carpeta que con
 3. Tener `Metodo` dentro de la carpeta de datos (ver abajo si se comparte con otro sistema).
 4. Desde Git Bash o una terminal: `<carpeta de datos>/Metodo/maquina/instalar.sh`.
 
-El script comprueba las dependencias, crea los ficheros que faltan, registra el marketplace e instala `dev@metodo`. Si un fichero ya existe y no coincide con la plantilla, enseña el diff y no lo toca.
+El script comprueba las dependencias, crea los ficheros que faltan, registra los servidores MCP de usuario de `metodo-maquina.json` (ver abajo) y el marketplace e instala `dev@metodo`. Si un fichero ya existe y no coincide con la plantilla, enseña el diff y no lo toca.
 
 | Opción | Qué hace |
 |---|---|

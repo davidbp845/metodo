@@ -65,13 +65,13 @@ Rutas de Linux; en Windows cambian de sitio. Todas las gestiona Claude Code salv
 |---|---|
 | `CLAUDE.md`, `README.md` | Instrucciones del repo y qué contiene |
 | `.claude-plugin/marketplace.json` | Hace de `Metodo` un marketplace de plugins |
-| `estilo/redaccion.md`, `estilo/diseno-web.md` | Reglas de escritura y de maquetación, importadas desde el `CLAUDE.md` global |
+| `estilo/redaccion.md`, `estilo/diseno-web.md`, `estilo/proporcion.md` | Reglas de escritura, de maquetación y de esfuerzo, importadas desde el `CLAUDE.md` global |
 | `estilo/obsidian/` | Fragmento CSS común de las bóvedas de Obsidian y cómo activarlo |
 | `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario, `instalar.sh` y este mapa |
 | `plugins/dev/README.md`, `metodologia.md` | Contrato del `## Método` y parte común de la metodología |
 | `plugins/dev/.claude-plugin/plugin.json`, `hooks/hooks.json` | Manifiesto del plugin y sus hooks |
 | `plugins/dev/skills/*/SKILL.md` | Skills del ciclo de desarrollo (`/dev:*`), con sus ficheros de apoyo |
-| `plugins/dev/scripts/` | Scripts que llaman los hooks y los skills (`hook-*.sh`, `latido.sh`, `metricas.sh`, `sin-subir.sh`) |
+| `plugins/dev/scripts/` | Scripts que llaman los hooks y los skills (`hook-*.sh`, `latido.sh`, `metricas.sh`, `coste.sh`, `sin-subir.sh`) |
 | `plugins/dev/evals/` | Pruebas de los skills: `ejecutar.sh` y un caso por carpeta (`case.yaml` y scripts que montan el proyecto) |
 | `plugins/marketing/` | Plugin `marketing`: skill `revisar-ads` y `scripts/umami-visitas.py` |
 | `local/` | Ignorada por git: retros agregadas (`local/retros/`), tabla de proyectos de la máquina (`local/proyectos.md`) y apps modelo de la guía Streamlit (`local/streamlit.md`) |

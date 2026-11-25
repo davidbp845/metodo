@@ -17,6 +17,9 @@
 # commits son los que citan en el pie `Issue:` un issue del tablero; los que no citan ninguno de
 # un tablero van en `repo_sin_tablero`, que es el mismo en todos los proyectos del repo y la retro
 # cuenta una vez. Un repo no compartido da `repo_sin_tablero: null` y sus commits son todos.
+#
+# `coste`: tokens y minutos de las sesiones de Claude Code abiertas en la carpeta del proyecto, en
+# total y por issue (cómo se atribuyen, en coste.sh); null si la máquina no tiene esos registros.
 set -u
 
 carpeta=${1:?uso: metricas.sh <carpeta> <inicio AAAA-MM-DD>}
@@ -54,7 +57,7 @@ if [ -n "$areas" ] && [ -z "${METRICAS_PAR+x}" ]; then
 			por_tipo: (if any(.[]; .por_tipo == null) then null else (map(.por_tipo | to_entries) | add | group_by(.key) | map({(.[0].key): (map(.value) | add)}) | add // {}) end),
 			fix_max: ([.[].fix_max | select(. != null)] | sort_by(-.fix, .issue) | .[0]),
 			repo_sin_tablero: .[0].repo_sin_tablero
-		}'
+		}' | jq -c --argjson coste "$(bash "$(dirname "$0")/coste.sh" "$carpeta" "$inicio")" '. + {coste: $coste}'
 	exit
 fi
 
@@ -228,4 +231,6 @@ jq -n -c \
 		compartido: $compartido
 	}
 	+ (if $compartido then (commits_de("propio") | de_commits) else ($todos | de_commits) end)
-	+ {repo_sin_tablero: (if $compartido and $todos != null then (commits_de("repo") | de_commits) else null end)}'
+	+ {repo_sin_tablero: (if $compartido and $todos != null then (commits_de("repo") | de_commits) else null end)}' |
+	if [ -n "${METRICAS_PAR+x}" ]; then cat
+	else jq -c --argjson coste "$(bash "$(dirname "$0")/coste.sh" "$carpeta" "$inicio")" '. + {coste: $coste}'; fi

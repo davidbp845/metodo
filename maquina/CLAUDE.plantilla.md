@@ -6,6 +6,8 @@ What repeats across projects lives once in `{{DATA_NATIVA}}/Metodo`
   @{{DATA_NATIVA}}/Metodo/estilo/redaccion.md
 - Layout and CSS rules for any web page:
   @{{DATA_NATIVA}}/Metodo/estilo/diseno-web.md
+- How much effort to put into the work (research, questions, subagents, depth):
+  @{{DATA_NATIVA}}/Metodo/estilo/proporcion.md
 - Development cycle with a GitHub Projects board: plugin `dev@metodo`
   (`/dev:crear-issue`, `/dev:sprint`, `/dev:resolver-issue`, `/dev:retro`...). Each project
   provides its data in a `## Método` section of its `CLAUDE.md`; the contract is in

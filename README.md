@@ -10,6 +10,7 @@ Fuente única de lo que se repite entre proyectos: skills, plantillas y reglas d
 |---|---|---|
 | `estilo/redaccion.md` | Reglas de escritura para docs, issues, comentarios y respuestas | Importado con `@` desde el `CLAUDE.md` global (`maquina/CLAUDE.plantilla.md`): se aplica en todos los proyectos |
 | `estilo/diseno-web.md` | Reglas de maquetación: tipografía y espaciado fluidos, layouts flexibles, mobile first | Importado con `@` desde el `CLAUDE.md` global (`maquina/CLAUDE.plantilla.md`): se aplica en todos los proyectos |
+| `estilo/proporcion.md` | Esfuerzo proporcional: cuándo profundizar, cuándo ir breve y qué no se recorta nunca | Importado con `@` desde el `CLAUDE.md` global (`maquina/CLAUDE.plantilla.md`): se aplica en todos los proyectos |
 | `estilo/obsidian/` | Fragmento CSS común de las bóvedas de Obsidian (`metodo.css`) y cómo enlazarlo y activarlo | Enlazado desde `.obsidian/snippets/` de cada bóveda |
 | `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario y `instalar.sh` | Generados en `~/.claude` de cada máquina con `maquina/instalar.sh` (ver `maquina/README.md`) |
 | `doc/A2-ADR/` | Decisiones de arquitectura del propio método | No llega: se lee desde aquí |

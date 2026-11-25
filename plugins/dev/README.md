@@ -11,6 +11,7 @@ Se instala con `/plugin install dev --marketplace davidbp845/metodo`.
 | `/dev:detectar-bug` | Diagnostica un comportamiento y, si es bug real, abre el issue |
 | `/dev:resolver-issue` | Implementa y cierra un issue de punta a punta |
 | `/dev:sprint` | Encadena todos los issues en Ready, en paralelo los independientes |
+| `/dev:siguiente` | Decide qué toca sin preguntar: nada si la cola de In review está llena, el sprint si hay Ready y, si no, los barridos pendientes de `barridos.md` |
 | `/dev:crear-retoque` | Apunta un retoque de UI/UX en el issue paraguas de su zona, sin implementarlo |
 | `/dev:resolver-retoques` | Resuelve uno a uno los retoques pendientes de una zona |
 | `/dev:cerrar-issue` | Cierra un issue verificado y lo pasa a In review |

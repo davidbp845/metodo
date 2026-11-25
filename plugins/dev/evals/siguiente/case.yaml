@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: siguiente
+description: Sin nada en Ready, lanza el barrido de Streamlit sobre una app sin issue de adaptación y deja el issue en Backlog
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje."
+  prompt: |
+    Usa el skill dev:siguiente en este proyecto. Para la simulación: en el tablero hay 2 issues en In review y ninguno en Ready; la rama actual es main; ninguna búsqueda de issues devuelve nada; el repo del método no tiene `local/barridos.md`; la versión instalada de Streamlit es la 1.66 y en el repo existen las etiquetas bug, enhancement, documentation, frontend y datos. En el bloque final, `gh issue create` lleva el cuerpo en línea con `--body $'…'` (con `\n` para los saltos de línea), no en un fichero.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: siguiente
+  - type: tool_used
+    name: lanza el barrido de Streamlit
+    tool: Skill
+    input_match: streamlit
+  - type: regex
+    name: mira si el barrido está hecho
+    pattern: 'gh issue list[^\n]*Adaptar la app Streamlit'
+  - type: regex
+    name: crea el issue de adaptación
+    pattern: 'gh issue create[^\n]*Adaptar la app Streamlit a la guía del Método'
+  - type: regex
+    name: lo deja en Backlog
+    pattern: 'item-edit[^\n]*Backlog'
+  - type: regex
+    name: no lo pasa a In progress
+    pattern: 'In progress'
+    match: not_contains
+  - type: regex
+    name: no toca código
+    pattern: 'git (-C \S+ )?(commit|push)'
+    match: not_contains

@@ -68,7 +68,7 @@ Rutas de Linux; en Windows cambian de sitio. Todas las gestiona Claude Code salv
 | `estilo/redaccion.md`, `estilo/diseno-web.md`, `estilo/proporcion.md` | Reglas de escritura, de maquetación y de esfuerzo, importadas desde el `CLAUDE.md` global |
 | `estilo/obsidian/` | Fragmento CSS común de las bóvedas de Obsidian y cómo activarlo |
 | `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario, `instalar.sh` y este mapa |
-| `plugins/dev/README.md`, `metodologia.md` | Contrato del `## Método` y parte común de la metodología |
+| `plugins/dev/README.md`, `metodologia.md`, `barridos.md` | Contrato del `## Método`, parte común de la metodología y barridos que recorre `/dev:siguiente` |
 | `plugins/dev/.claude-plugin/plugin.json`, `hooks/hooks.json` | Manifiesto del plugin y sus hooks |
 | `plugins/dev/skills/*/SKILL.md` | Skills del ciclo de desarrollo (`/dev:*`), con sus ficheros de apoyo |
 | `plugins/dev/scripts/` | Scripts que llaman los hooks y los skills (`hook-*.sh`, `latido.sh`, `metricas.sh`, `coste.sh`, `sin-subir.sh`) |

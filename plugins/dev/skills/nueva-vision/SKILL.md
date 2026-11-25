@@ -3,11 +3,11 @@ name: nueva-vision
 description: Actualiza el documento de visión (A1) para un cambio de alcance o estrategia, y abre issues de Backlog si ya es accionable
 argument-hint: qué cambia en la visión (texto libre)
 ---
-Actualiza el documento de visión del proyecto (`doc/A1-Vision/`) para reflejar "$ARGUMENTS". Es un documento vivo: se actualiza cuando cambia la visión, no se cierra. Si el proyecto no tiene `doc/A1-Vision/`, dilo y pregunta si crearlo.
+Actualiza el documento de visión del proyecto (`<Documentación>A1-Vision/`, con la carpeta del campo **Documentación** de `## Método`, `doc/` si no lo tiene) para reflejar "$ARGUMENTS". Es un documento vivo: se actualiza cuando cambia la visión, no se cierra. Si el proyecto no tiene esa carpeta, dilo y pregunta si crearla.
 
 Si `## Método` indica **Repo**, todos los comandos `gh` llevan `-R <repo>`, y `doc/`, el código, la Verificación y los commits son los de la carpeta que indica, no los de la raíz del proyecto. Con **Repos por área**, el repo, la carpeta y la Verificación son los del área del issue, con las reglas de [Repos por área](../../README.md#repos-por-área).
 
-1. Identifica qué ficheros de `doc/A1-Vision/` afecta el cambio (índice en su `README.md`). Si toca varios, actualízalos todos.
+1. Identifica qué ficheros de la visión afecta el cambio (índice en su `README.md`). Si toca varios, actualízalos todos.
 2. Si lo que cambia es una decisión de arquitectura (capas, puertos, almacenamiento, frameworks) o contradice una ADR aceptada, no es visión: para y propón `/dev:crear-decision` en su lugar.
 3. Si el cambio depende del estado real del código (qué casos de uso o qué piezas existen hoy), audítalo antes de escribir; no lo supongas.
 4. Reescribe la sección afectada como si siempre hubiera dicho eso: estado actual, sin historial de cómo se llegó ahí.

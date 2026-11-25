@@ -8,6 +8,8 @@ Parte común de la metodología de diseño y desarrollo de los proyectos que usa
 
 Sin el campo, nada de esto se aplica: no se exige diseño técnico ni UX previo, y no hay documento de visión ni carpeta de ADR.
 
+Donde este documento dice `doc/A1-Vision/` o `doc/C*/`, la carpeta es la del campo **Documentación** de `## Método` (`doc/` por defecto). Así, cuando varios tableros comparten repo, cada uno guarda su visión, sus mockups y sus retros en su carpeta (`doc/<proyecto>/A1-Vision/`). A0, A2 y A3 siguen en `doc/`, comunes a todo el repo.
+
 Es un guion de arranque, no una norma cerrada. Cada etapa se describe con **documento**, **índice** (secciones esperadas), **resultado** (qué queda al terminar), **columna** del tablero (campo Status: Backlog / Ready / In progress / In review / Done) y **skill** de Claude Code, si hay uno. Lo propio del proyecto que leen los skills (tablero, Verificación, etiquetas, retoques, mapa de documentación) está en su `## Método`, no en la metodología.
 
 ## De dónde viene

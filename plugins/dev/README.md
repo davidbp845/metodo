@@ -98,6 +98,7 @@ Los skills la leen al empezar. Si falta un dato obligatorio, el skill lo dice y 
 - Verificación: `venv/bin/pytest`, `venv/bin/ruff check .`
 - Formateador: `venv/bin/ruff format` para `*.py`
 - Metodología: `doc/A0-Metodologia/metodologia-de-diseno-y-desarrollo.md`
+- Documentación: `doc/nombre/`
 - Etiquetas de área: `frontend`, `datos`, `infraestructura`, `marketing`
 - Etiquetas de tipo: solo bug
 - Repos relacionados: `../otro-repo`
@@ -137,6 +138,7 @@ Los skills la leen al empezar. Si falta un dato obligatorio, el skill lo dice y 
 | Verificación | Sí | Comandos que deben pasar antes de cerrar un issue |
 | Formateador | No | Orden que formatea un fichero y los patrones de nombre a los que se aplica (`` `orden` para `*.py` ``; varias, separadas por `;`). El hook la ejecuta tras cada edición, desde la carpeta del campo Repo o la raíz, con el fichero como último argumento y solo si está dentro de esa carpeta. Sin él, no se formatea nada |
 | Metodología | No | Documento de la metodología en tres niveles del proyecto: su nivel B y sus ajustes a los niveles A y C comunes de [`metodologia.md`](metodologia.md), al que enlaza. Con él, `/dev:crear-issue` sigue el índice del cuerpo del issue, `/dev:cerrar-issue` el de la verificación, y `/dev:resolver-issue` y `/dev:sprint` añaden el diseño técnico o UX que faltaba. Sin él, no se aplica tampoco la parte común: no se exige diseño previo y no hay documento de visión ni carpeta de ADR |
+| Documentación | No | Carpeta de la visión (A1) y de las carpetas de etapa C (`C3-UX-UI`, `C7-Cierre`...) de este tablero, dentro de la carpeta del código, cuando varios tableros comparten repo y cada uno tiene su documentación (`doc/<proyecto>/`). `/dev:retro` guarda ahí sus retros y `/dev:nueva-vision` edita ahí la visión. La metodología (A0), las ADR (A2) y el despliegue (A3) siguen en `doc/`, comunes al repo. Sin él, `doc/` |
 | Etiquetas de área | No | Sin ella, se usan las etiquetas que existan en el repo |
 | Repos relacionados | No | Otros repos cuyos commits cuentan en `/dev:retro` y `/dev:revisar-docs` |
 | Etiquetas de tipo | No | `solo bug`: el issue lleva de tipo solo `bug`, cuando lo es. Sin él, siempre una de tipo (`bug`, `enhancement` o `documentation`) |

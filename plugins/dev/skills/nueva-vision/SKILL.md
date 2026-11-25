@@ -3,7 +3,7 @@ name: nueva-vision
 description: Actualiza el documento de visión (A1) para un cambio de alcance o estrategia, y abre issues de Backlog si ya es accionable
 argument-hint: qué cambia en la visión (texto libre)
 ---
-Actualiza el documento de visión del proyecto (`<Documentación>A1-Vision/`, con la carpeta del campo **Documentación** de `## Método`, `doc/` si no lo tiene) para reflejar "$ARGUMENTS". Es un documento vivo: se actualiza cuando cambia la visión, no se cierra. Si el proyecto no tiene esa carpeta, dilo y pregunta si crearla.
+Actualiza el documento de visión del proyecto (`<Documentación>/A1-Vision/`, con la carpeta del campo **Documentación** de `## Método`, `doc/` si no lo tiene) para reflejar "$ARGUMENTS". Es un documento vivo: se actualiza cuando cambia la visión, no se cierra. Si el proyecto no tiene esa carpeta, dilo y pregunta si crearla.
 
 Si `## Método` indica **Repo**, todos los comandos `gh` llevan `-R <repo>`, y `doc/`, el código, la Verificación y los commits son los de la carpeta que indica, no los de la raíz del proyecto. Con **Repos por área**, el repo, la carpeta y la Verificación son los del área del issue, con las reglas de [Repos por área](../../README.md#repos-por-área).
 

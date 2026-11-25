@@ -7,7 +7,7 @@ Retrospectiva del trabajo en la ventana "$ARGUMENTS" (`7d` por defecto; acepta `
 
 Si `## Método` indica **Repo**, todos los comandos `gh` llevan `-R <repo>`, y `doc/`, el código, la Verificación y los commits son los de la carpeta que indica, no los de la raíz del proyecto. Con **Repos por área**, el repo, la carpeta y la Verificación son los del área del issue, con las reglas de [Repos por área](../../README.md#repos-por-área).
 
-Es solo lectura salvo el paso 6. Lee antes la sección `## Método` del `CLAUDE.md` del proyecto (tablero, repos relacionados, retoques, metodología, documentación). La carpeta de las retros es `<Documentación>C7-Cierre/retros/`, con la carpeta del campo **Documentación** (`doc/` si no lo tiene).
+Es solo lectura salvo el paso 6. Lee antes la sección `## Método` del `CLAUDE.md` del proyecto (tablero, repos relacionados, retoques, metodología, documentación). La carpeta de las retros es `<Documentación>/C7-Cierre/retros/`, con la carpeta del campo **Documentación** (`doc/` si no lo tiene).
 
 1. **Ventana**: fecha de inicio a partir de la fecha de hoy que da el sistema, alineada a medianoche (`--since "AAAA-MM-DDT00:00:00"`). Si el argumento no tiene forma `Nd`/`Nw`, enseña el uso y termina.
 2. **Datos**, antes de interpretar nada:

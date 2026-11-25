@@ -19,7 +19,7 @@ Es solo lectura salvo el paso 6. Lee antes la sección `## Método` del `CLAUDE.
    - La retro anterior más reciente en la carpeta de las retros, si existe.
 3. **Métricas**, en una tabla corta, cada fila con su dato real (si no se pudo obtener, "no disponible", nunca 0):
    - Issues cerrados (completados vs wontfix) y abiertos; saldo neto del Backlog.
-   - Issues esperando en **In review** y antigüedad del más viejo: es la revisión del usuario, el cuello de botella típico.
+   - Issues esperando en **In review** y antigüedad del más viejo (fecha de cierre del issue de cada item, cruzado por número y repo: [Item de un issue en el tablero](../../README.md#item-de-un-issue-en-el-tablero)): es la revisión del usuario, el cuello de botella típico.
    - Reaperturas y commits `fix` que citan un issue cerrado antes de la ventana (señal de verificación insuficiente).
    - Commits por tipo y por repo, y el issue con más commits `fix` (por su pie `Issue:`) y cuántos. Si `fix` supera el 50 %, señálalo, y di si sale sobre todo de ese issue: entonces es la cola de una funcionalidad, no un deterioro general.
    - Puntos calientes: ficheros tocados 5+ veces.

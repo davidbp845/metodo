@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: cerrar-issue
-description: Comenta la verificación, cierra y pasa a In review, nunca a Done
+description: Comenta la verificación, cierra y pasa a In review el item del repo del issue, nunca a Done
 tags: [dev]
 runs: 2
 context:
@@ -11,6 +11,7 @@ execution:
   append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje."
   prompt: |
     Usa el skill dev:cerrar-issue para cerrar el issue 12. Está implementado en el commit abc1234 y verificado: venv/bin/pytest pasa los 5 tests, y he probado a mano el total del carrito con envío.
+    El repo del proyecto es `ejemplo/tienda`. El tablero comparte números con un repo antiguo: `gh project item-list 1 --owner ejemplo --format json --limit 500` da, entre otros, `{"id":"PVTI_viejo12","content":{"number":12,"repository":"ejemplo/tienda-antigua"},"status":"Done"}` y `{"id":"PVTI_tienda12","content":{"number":12,"repository":"ejemplo/tienda"},"status":"In progress"}`.
 graders:
   - type: tool_used
     name: carga el skill
@@ -22,6 +23,13 @@ graders:
   - type: regex
     name: Status In review
     pattern: 'item-edit[^\n]*In review'
+  - type: regex
+    name: edita el item del repo del issue
+    pattern: 'item-edit[^\n]*PVTI_tienda12'
+  - type: regex
+    name: no toca el item del otro repo
+    pattern: 'item-edit[^\n]*PVTI_viejo12'
+    match: not_contains
   - type: regex
     name: nunca Done
     pattern: 'gh project item-edit[^\n]*Done'

@@ -14,7 +14,7 @@ Cierra ese issue del tablero indicado en la sección `## Método` del `CLAUDE.md
 3. Comenta el motivo, el de los argumentos o el ya discutido en la conversación. Sé concreto: qué cambió (contexto, prioridad, comportamiento aceptado como está) para que se entienda sin releer el hilo. Si queda absorbido por otro issue o ADR, cítalo.
 4. Si el issue señalaba código muerto o una funcionalidad a medias que ya no se hará, comprueba que hay un issue abierto para retirarlo; si no, propón crearlo con `dev:crear-issue`.
 5. Cierra con motivo "not planned" (`gh issue close <issue> --reason "not planned"`).
-6. Pon su Status a **Done**: no hay nada que revisar.
+6. Pon su Status a **Done** (el item, por número y repo: [Item de un issue en el tablero](../../README.md#item-de-un-issue-en-el-tablero)): no hay nada que revisar.
 7. Confirma con un resumen breve: issue cerrado como wontfix, Status final y enlace.
 
 Si el motivo no está claro, pregúntalo antes de cerrar; no inventes una justificación.

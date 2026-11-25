@@ -58,7 +58,22 @@ Un tablero puede tener issues en varios repos: los de un área (p. ej. `marketin
 - **Carpeta del código**: la de esa misma línea. Ahí se leen `doc/`, se edita, se hace el commit y se mira la rama; los `gh` del issue llevan `-R <su repo>`.
 - **Verificación**: la de la línea del área, si la lleva. Si no, no hay verificación automática: el comentario de cierre dice qué tiene que revisar el usuario en In review. Las Verificaciones extra solo cuentan para el repo de **Repo**.
 - **Número de issue suelto** (`/dev:resolver-issue 12`): se busca entre los items del tablero (`gh project item-list`, cuyo `content.repository` da el repo de cada uno). Si el número está en más de un repo, se pregunta. También vale `owner/repo#12`.
-- **Listados del tablero entero** (`/dev:sprint`, `/dev:higiene-tablero`, `/dev:retro`): el tablero ya da los items de todos los repos; cada comando sobre un issue usa el repo del item, y lo que se lista por repo (`gh issue list`, eventos, commits) se pide a cada repo del proyecto. `scripts/metricas.sh` mide cada repo y suma.
+- **Listados del tablero entero** (`/dev:sprint`, `/dev:higiene-tablero`, `/dev:retro`): el tablero ya da los items de todos los repos; cada comando sobre un issue usa el repo del item, y lo que se lista por repo (`gh issue list`, eventos, commits) se pide a cada repo del proyecto y se cruza con los items por número y repo. `scripts/metricas.sh` mide cada repo y suma.
+
+## Item de un issue en el tablero
+
+Un tablero puede tener dos items con el mismo número de issue: los de [Repos por área](#repos-por-área), o los de un repo antiguo que sigue en el tablero. Por eso el item de un issue se localiza por número **y** repo, nunca solo por número:
+
+```sh
+gh project item-list <número> --owner <owner> --format json --limit 500 \
+  | jq -r --arg repo '<owner/repo>' --argjson n <issue> \
+      '.items[] | select(.content.number == $n and (.content.repository | ascii_downcase) == ($repo | ascii_downcase)) | .id'
+```
+
+- El repo es el del issue: el de **Repo**, el de su área en Repos por área o, sin ninguno de los dos, el de `gh repo view --json nameWithOwner` en la raíz.
+- `--limit 500` porque, sin él, `item-list` da solo los 30 primeros items y el issue puede quedar fuera.
+- Si no sale ningún item, o sale más de uno, se dice y no se edita nada.
+- Lo mismo vale al cruzar items del tablero con un listado por repo (`gh issue list`, eventos): se cruzan por número y repo.
 
 ## Modo demo
 
@@ -158,7 +173,7 @@ Sin el campo Repo, el repo de GitHub se deduce de `gh repo view --json nameWithO
 
 `evals/` tiene una suite de `claude plugin eval` con un caso por skill del ciclo (`crear-issue`, `resolver-issue`, `cerrar-issue`, `sprint`, `publicar-version`), uno del sprint en paralelo (`sprint-paralelo`), uno del sprint en una rama larga (`sprint-rama`), uno de `resolver-issue` en un proyecto con modo demo (`resolver-issue-demo`), otro con un issue de un área de Repos por área (`resolver-issue-areas`) uno del modo `revisar` de `streamlit` y uno de `siguiente` sin nada en Ready, que lanza el barrido de Streamlit. Comprueba lo que hace cada skill, no solo la forma del plugin: Status final, etiquetas, orden de los pasos, nunca Done y nunca push (salvo `publicar-version`, que sube el commit de versión y la etiqueta tras la confirmación). Se ejecuta con `evals/ejecutar.sh` (opciones extra, como `--case crear-issue` o `--runs 1`, se pasan tal cual). Cuesta alrededor de 3 USD con las dos pasadas por caso, y los resultados quedan en `evals/results/`, fuera de git.
 
-Ningún caso toca GitHub: no tienen Bash, y una instrucción de sistema le pide al agente que apunte cada comando `gh` y `git` en vez de ejecutarlo y que los repita todos en un bloque `sh` al final. Los evaluadores `regex` miran ese bloque. Cada caso parte del proyecto de ejemplo de `evals/comun/proyecto.sh`, un repo git con un `## Método` genérico; el de `publicar-version` tiene el suyo, con etiquetas y el campo Versionado, y el de `publicar-version-hallazgo` lo reutiliza con un fallo en el diff, el de `streamlit`, con una app que incumple varias reglas de la guía (y el de `siguiente` lo reutiliza), y el de `sprint-paralelo` añade un segundo módulo para tener dos issues que no tocan los mismos ficheros, el de `resolver-issue-demo`, el campo Demo con datos reales y de demo y un listado que lee unos u otros, y el de `resolver-issue-areas`, el área `marketing` en un segundo repo sin código. Como los casos no lanzan subagentes, en `sprint-paralelo` el agente apunta una línea por subagente y hace él el cambio.
+Ningún caso toca GitHub: no tienen Bash, y una instrucción de sistema le pide al agente que apunte cada comando `gh` y `git` en vez de ejecutarlo y que los repita todos en un bloque `sh` al final. Los evaluadores `regex` miran ese bloque. Cada caso parte del proyecto de ejemplo de `evals/comun/proyecto.sh`, un repo git con un `## Método` genérico; el de `publicar-version` tiene el suyo, con etiquetas y el campo Versionado, y el de `publicar-version-hallazgo` lo reutiliza con un fallo en el diff, el de `streamlit`, con una app que incumple varias reglas de la guía (y el de `siguiente` lo reutiliza), y el de `sprint-paralelo` añade un segundo módulo para tener dos issues que no tocan los mismos ficheros, el de `resolver-issue-demo`, el campo Demo con datos reales y de demo y un listado que lee unos u otros, y el de `resolver-issue-areas`, el área `marketing` en un segundo repo sin código. Como los casos no lanzan subagentes, en `sprint-paralelo` el agente apunta una línea por subagente y hace él el cambio. El prompt de `cerrar-issue` da dos items del tablero con el mismo número en repos distintos, y el caso comprueba que se edita el del repo del issue.
 
 Al crear o cambiar un skill del ciclo, se añade o se ajusta su caso:
 

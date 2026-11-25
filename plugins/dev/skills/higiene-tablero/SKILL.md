@@ -6,7 +6,7 @@ Higiene periódica del tablero indicado en la sección `## Método` del `CLAUDE.
 
 Si `## Método` indica **Repo**, todos los comandos `gh` llevan `-R <repo>`, y `doc/`, el código, la Verificación y los commits son los de la carpeta que indica, no los de la raíz del proyecto. Con **Repos por área**, el repo, la carpeta y la Verificación son los del área del issue, con las reglas de [Repos por área](../../README.md#repos-por-área).
 
-1. **Done a archivar**: lista los issues en Status **Done** (`gh project item-list <número> --owner <owner> --format json`, cruzado con `gh issue list --state closed --json number,title,closedAt` para la fecha de cierre). Señala como candidatos los cerrados hace más de ~3 meses (o el umbral que dé el usuario). Archivar no borra ni reabre: solo los saca de la vista por defecto.
+1. **Done a archivar**: lista los issues en Status **Done** (`gh project item-list <número> --owner <owner> --format json`, cruzado por número y repo con `gh issue list --state closed --json number,title,closedAt` de cada repo para la fecha de cierre; ver [Item de un issue en el tablero](../../README.md#item-de-un-issue-en-el-tablero)). Señala como candidatos los cerrados hace más de ~3 meses (o el umbral que dé el usuario). Archivar no borra ni reabre: solo los saca de la vista por defecto.
 2. **Backlog a revisar**: lista los issues en **Backlog** y, con un vistazo al título y las primeras líneas, da una señal tentativa para cada uno:
    - sigue vigente,
    - candidato a `wontfix` (contexto cambiado, resuelto en otro issue, decisión posterior que lo hizo irrelevante),

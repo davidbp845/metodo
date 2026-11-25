@@ -171,6 +171,11 @@
     }
   },
   "theme": "dark",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "medium"
+    }
+  },
   "autoMode": {
     "environment": [
       "### Org-wide",

@@ -56,7 +56,7 @@ Este directorio es a la vez un marketplace de plugins de Claude Code (`.claude-p
          rama-verificada: produccion            # opcional
    ```
 
-   Con `rama-verificada`, un push a `main` que pasa la Verificación avanza esa rama hasta el commit. Si el servidor despliega desde ella y no desde `main`, solo le llega código con los tests en verde, sin guardar ningún token para consultar el CI. Como `Metodo` es privado, sus workflows solo los pueden usar los repos privados del mismo usuario (Settings → Actions → General → Access: *Accessible from repositories owned by the user*). Un repo público no puede llamarlos: se queda sin este CI hasta que `Metodo` sea público.
+   Con `rama-verificada`, un push a `main` que pasa la Verificación avanza esa rama hasta el commit. Si el servidor despliega desde ella y no desde `main`, solo le llega código con los tests en verde, sin guardar ningún token para consultar el CI. `Metodo` es público, así que cualquier repo puede llamar a sus workflows.
 
 ## Cómo se mejora
 

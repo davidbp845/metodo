@@ -29,6 +29,12 @@ running the old code. To check a change, use the project's CLI or ask the user t
 Claude Code (or reconnect the server with `/mcp`); never trust an MCP result as verification
 of code edited in the same session.
 
+A project's MCP server can also be loaded for every session, from `mcpServers` in
+`metodo-maquina.json` (see `Metodo/maquina/README.md`). Outside its folder, that project's
+`CLAUDE.md` is not loaded: before the first call to one of its tools in a session, read the
+`CLAUDE.md` of the project that holds its command, and follow its rules (real data, demo mode,
+what never leaves the project) as if working there.
+
 # Demo mode (all projects)
 
 A project with a `Demo` field in its `## Método` has a file that picks real or demo data. Read

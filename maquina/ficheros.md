@@ -12,11 +12,11 @@ Se generan desde `maquina/` con `instalar.sh` (ver `README.md`); no se editan a 
 |---|---|
 | `<config>/CLAUDE.md` | Instrucciones globales, desde `CLAUDE.plantilla.md`. Importa con `@` las reglas de `estilo/` |
 | `<config>/settings.json` | Permisos (`allow`/`ask`/`deny`), hooks y marketplace del método, desde `settings.plantilla.json` |
-| `<config>/metodo-maquina.json` | Carpetas de proyectos y reglas de una sola máquina, fuera del repo; las reglas se suman a las de la plantilla |
+| `<config>/metodo-maquina.json` | Carpetas de proyectos, reglas y servidores MCP de usuario de una sola máquina, fuera del repo; las reglas se suman a las de la plantilla y los servidores se registran en `~/.claude.json` |
 | `<config>/hooks/*.sh` | Hooks de usuario, copiados de `maquina/hooks/` |
 | `<config>/*.bak-AAAAMMDD-HHMMSS` | Copias que deja `instalar.sh --sobrescribir` |
 | `~/.config/systemd/user/metodo-desatendido.{service,timer}` | Temporizador de las sesiones desatendidas, desde `maquina/desatendido/` con `instalar.sh --desatendido` (solo Linux) |
-| `~/.claude.json` | Estado de Claude Code: proyectos abiertos, servidores MCP de usuario, preferencias. Lo gestiona Claude Code |
+| `~/.claude.json` | Estado de Claude Code: proyectos abiertos, servidores MCP de usuario, preferencias. Lo gestiona Claude Code; `instalar.sh` solo añade o reemplaza los servidores de `metodo-maquina.json` |
 
 ### Plugins
 
@@ -67,6 +67,7 @@ Rutas de Linux; en Windows cambian de sitio. Todas las gestiona Claude Code salv
 | Ruta | Qué es |
 |---|---|
 | `CLAUDE.md`, `README.md` | Instrucciones del repo y qué contiene |
+| `doc/piezas.md`, `doc/A2-ADR/` | Cómo encajan las piezas de una sesión y decisiones del propio método |
 | `.claude-plugin/marketplace.json` | Hace de `Metodo` un marketplace de plugins |
 | `estilo/redaccion.md`, `estilo/diseno-web.md`, `estilo/proporcion.md` | Reglas de escritura, de maquetación y de esfuerzo, importadas desde el `CLAUDE.md` global |
 | `estilo/obsidian/` | Fragmento CSS común de las bóvedas de Obsidian y cómo activarlo |

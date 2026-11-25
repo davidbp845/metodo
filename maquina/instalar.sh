@@ -16,10 +16,12 @@ Uso: maquina/instalar.sh [--comprobar | --sobrescribir] [--desatendido]
 
 Directorio de configuración: $CLAUDE_CONFIG_DIR, o ~/.claude si no está definido.
 Reglas propias de esta máquina: <config>/metodo-maquina.json (opcional), con la forma
-{"carpetas": [...], "permissions": {"allow": [...], "deny": [...], "ask": [...], "additionalDirectories": [...]}}.
+{"carpetas": [...], "permissions": {"allow": [...], "deny": [...], "ask": [...], "additionalDirectories": [...]},
+ "mcpServers": {...}}.
 "carpetas" son las carpetas de proyectos dentro de la de datos (sin ella, la carpeta de datos
 entera): cada una se puede editar y es directorio de trabajo. Las listas de "permissions" se
-añaden al final de las de la plantilla.
+añaden al final de las de la plantilla. "mcpServers", con la forma de un .mcp.json y rutas
+absolutas, se registran a nivel de usuario (claude mcp add-json --scope user).
 EOF
 }
 
@@ -168,6 +170,36 @@ for par in "${destinos[@]}"; do
   fi
   case "$destino" in "$config"/hooks/*) [ -f "$destino" ] && chmod +x "$destino" ;; esac
 done
+
+# --- Servidores MCP de usuario ---
+# Los "mcpServers" de metodo-maquina.json se registran a nivel de usuario, para tenerlos en
+# cualquier sesión y no solo en la carpeta de su proyecto. Claude Code los guarda en
+# .claude.json, que no es una plantilla: se comparan por servidor, sin los campos vacíos que
+# añade al guardarlos.
+if [ -f "$extra" ]; then
+  estado=${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/.claude.json}
+  estado=${estado:-$HOME/.claude.json}
+  limpiar='with_entries(select(.value != [] and .value != {} and (.key != "type" or .value != "stdio")))'
+  while IFS= read -r nombre; do
+    quiere=$(jq -cS --arg n "$nombre" ".mcpServers[\$n] | $limpiar" "$extra")
+    tiene=$( (jq -cS --arg n "$nombre" ".mcpServers[\$n] // empty | $limpiar" "$estado" 2>/dev/null) || true)
+    if [ -z "$tiene" ]; then
+      if [ "$modo" = comprobar ]; then echo "Falta: servidor MCP $nombre"; difiere=1; continue; fi
+      claude mcp add-json --scope user "$nombre" "$quiere" >/dev/null && echo "Creado: servidor MCP $nombre"
+    elif [ "$tiene" = "$quiere" ]; then
+      echo "Al día: servidor MCP $nombre"
+    else
+      difiere=1
+      echo "Difiere: servidor MCP $nombre"
+      echo "  instalado: $tiene"
+      echo "  generado:  $quiere"
+      if [ "$modo" = sobrescribir ]; then
+        claude mcp remove --scope user "$nombre" >/dev/null
+        claude mcp add-json --scope user "$nombre" "$quiere" >/dev/null && echo "Reemplazado (el instalado era el de arriba)"
+      fi
+    fi
+  done < <(jq -r '.mcpServers // {} | keys[]' "$extra")
+fi
 
 if [ "$modo" = comprobar ]; then exit "$difiere"; fi
 if [ "$difiere" = 1 ] && [ "$modo" = instalar ]; then

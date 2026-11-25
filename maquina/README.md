@@ -59,12 +59,14 @@ Lo que solo tiene sentido en una máquina (por ejemplo, bloquear una partición 
 ```json
 {
   "carpetas": ["Apps", "Cursos"],
-  "permissions": { "deny": ["Read(//ruta/privada/**)", "Edit(//ruta/privada/**)"] }
+  "permissions": { "deny": ["Read(//ruta/privada/**)", "Edit(//ruta/privada/**)"] },
+  "mcpServers": { "correo": { "command": "/ruta/datos/Apps/correo/mcp.sh" } }
 }
 ```
 
 - `carpetas`: las carpetas de proyectos dentro de la carpeta de datos. Cada una se puede editar sin preguntar y es directorio de trabajo, y la política de operación autónoma del `CLAUDE.md` global se aplica a sus proyectos. Sin ella, cuenta la carpeta de datos entera.
 - `permissions`: sus listas se añaden al final de las de la plantilla.
+- `mcpServers`: servidores MCP de un proyecto que se quieren en cualquier sesión, no solo en la carpeta de su proyecto. Tienen la forma de su `.mcp.json`, con rutas absolutas, y el script los registra a nivel de usuario (`claude mcp add-json --scope user`, que los guarda en `~/.claude.json`); `--comprobar` y `--sobrescribir` los tratan como a los ficheros. Sus permisos (qué herramientas se usan sin preguntar y cuáles piden confirmación) van en `permissions`, copiados del `.claude/settings.json` del proyecto: fuera de su carpeta, ese fichero no se carga. El `CLAUDE.md` global hace que la sesión lea el `CLAUDE.md` del proyecto antes de usar sus herramientas. Cuándo conviene: [`doc/piezas.md`](../doc/piezas.md).
 
 ## Cambiar la configuración
 

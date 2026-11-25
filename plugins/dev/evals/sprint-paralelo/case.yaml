@@ -1,0 +1,51 @@
+schema_version: "1.0"
+name: sprint-paralelo
+description: Dos issues independientes van en paralelo, cada uno en su worktree, y se integran de uno en uno; el que depende de otro va en secuencia
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 60
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell ni lanza subagentes, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh`, `git` o `ln`, apúntalo. Donde el skill lance un subagente, apunta una línea `# subagente #<NN> en <ruta del worktree>` y haz tú su cambio en la carpeta del proyecto. Tu último mensaje termina con un bloque `sh` con todos esos comandos y líneas de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción, o la ruta del directorio de git), pon un marcador entre `<>` con el número del issue y el nombre del Status, por ejemplo `<item 30>` u `<opción In progress>`. No pidas confirmación: lo que preguntarías ya está en el mensaje. Los comandos de Verificación cuéntalos como ejecutados y pasados, y los rebases como limpios."
+  prompt: |
+    Usa el skill dev:sprint. En Ready hay tres issues, en este orden, ninguno con comentarios:
+    - #30 "total() falla si la lista lleva None": total() de app/calculo.py lanza TypeError cuando algún elemento es None; debe ignorar los None.
+    - #31 "saludo() sin espacios sobrantes": saludo() de app/texto.py debe quitar los espacios de los extremos del nombre.
+    - #32 "total() redondea a dos decimales": depende de #30; total() de app/calculo.py devuelve el resultado redondeado a dos decimales.
+    En el tablero hay 1 issue en In review. La rama principal es main.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: sprint
+  - type: regex
+    name: worktree del 30
+    pattern: 'worktree add[^\n]*sprint/30'
+  - type: regex
+    name: worktree del 31
+    pattern: 'worktree add[^\n]*sprint/31'
+  - type: regex
+    name: el 32 no va en paralelo
+    pattern: 'worktree add[^\n]*sprint/32'
+    match: not_contains
+  - type: regex
+    name: integra con fast-forward
+    pattern: 'merge --ff-only sprint/3[01]'
+  - type: regex
+    name: borra los worktrees
+    pattern: 'worktree remove'
+  - type: regex
+    name: cierra los tres
+    pattern: 'gh issue close 30[\s\S]*gh issue close 32|gh issue close 31[\s\S]*gh issue close 32'
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains
+  - type: llm
+    name: paralelo y secuencia
+    criteria: |
+      En la evaluación ningún comando se ejecuta: los comandos se juzgan por el bloque `sh` del último mensaje. Los issues 30 y 31 forman un grupo en paralelo: cada uno pasa a In progress, recibe su comentario de plan y tiene su worktree y su línea de subagente antes de que se integre ninguno. Se integran de uno en uno (rebase sobre main, merge --ff-only y Verificación) y cada uno se cierra a In review después de integrarse. Los cambios de código los hace el propio agente en la carpeta del proyecto, como pide la instrucción de la evaluación en lugar de los subagentes: eso no cuenta como fallo. El 32 depende del 30 y se resuelve después, en secuencia, sobre main y sin worktree. Ningún issue pasa a Done.
+    focus: trace

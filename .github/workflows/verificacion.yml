@@ -1,0 +1,57 @@
+# Verificación reutilizable de un proyecto Python: instala dependencias y pasa los comandos de la
+# Verificación de su `## Método` en cada push. Cómo lo adopta un proyecto: README.md de Metodo.
+#
+# Con `rama-verificada`, un push a la rama por defecto que pasa la Verificación avanza esa rama
+# hasta el commit. Un servidor que despliega desde ella solo recibe código con los tests en verde,
+# sin necesitar un token para consultar el CI.
+name: Verificación
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Versión de Python, la de producción si la hay
+        type: string
+        default: "3.12"
+      instalar:
+        description: Comando que instala las dependencias
+        type: string
+        default: pip install -r requirements.txt
+      verificacion:
+        description: Comandos de la Verificación, uno por línea; para en el primero que falla
+        type: string
+        required: true
+      rama-verificada:
+        description: Rama que avanza al commit verificado en un push a la rama por defecto (vacío, ninguna)
+        type: string
+        default: ""
+
+jobs:
+  verificacion:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+
+      - name: Instalar dependencias
+        run: ${{ inputs.instalar }}
+
+      - name: Verificación
+        shell: bash -eo pipefail {0}
+        run: ${{ inputs.verificacion }}
+
+      - name: Avanzar la rama verificada
+        if: inputs.rama-verificada != '' && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+        env:
+          RAMA: ${{ inputs.rama-verificada }}
+        # Solo avance rápido: si la rama verificada tuviera un commit que no está en la rama por
+        # defecto, el push falla en vez de perderlo.
+        run: git push origin "HEAD:refs/heads/$RAMA"

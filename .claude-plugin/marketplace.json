@@ -1,0 +1,24 @@
+{
+  "name": "metodo",
+  "description": "Método de trabajo común a todos los proyectos de David",
+  "owner": {
+    "name": "David"
+  },
+  "plugins": [
+    {
+      "name": "dev",
+      "source": "./plugins/dev",
+      "description": "Ciclo de desarrollo con tablero de GitHub: issues, sprint, ADR, visión, retro y revisión de docs"
+    },
+    {
+      "name": "marketing",
+      "source": "./plugins/marketing",
+      "description": "Revisión de campañas de pago y de su tráfico: exportaciones de Google Ads cruzadas con la analítica web, con informe guardado"
+    },
+    {
+      "name": "comercial",
+      "source": "./plugins/comercial",
+      "description": "Prospección B2B del negocio de un proyecto: cliente ideal, empresas con señal verificable, primer contacto y carga en el CRM ligero, con informe comercial diario"
+    }
+  ]
+}

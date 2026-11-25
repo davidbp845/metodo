@@ -1,0 +1,7 @@
+{
+  "name": "dev",
+  "description": "Ciclo de desarrollo con tablero de GitHub: issues, sprint, ADR, visión, retro y revisión de docs",
+  "author": {
+    "name": "David"
+  }
+}

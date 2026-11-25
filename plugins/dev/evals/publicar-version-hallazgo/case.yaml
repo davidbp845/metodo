@@ -1,0 +1,44 @@
+schema_version: "1.0"
+name: publicar-version-hallazgo
+description: El review del diff desde la última etiqueta encuentra un fallo, lo abre como issue con un título que lo describe y no etiqueta sin el visto bueno expreso
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo; para leer un diff, lee los ficheros del repo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación de lo que ya está en el mensaje."
+  prompt: |
+    Usa el skill dev:publicar-version para publicar la versión siguiente sobre la punta de la rama master. El árbol está limpio y master está al día con origin. La última etiqueta es v0.1.0 y desde ella hay tres commits: "docs(readme): cómo instalar", "feat(config): moneda de la tienda" y "refactor(calculo): total sin cabecera". Confirmo de antemano el número que propongas, la punta de master como commit y el borrador del apartado que escribas.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: publicar-version
+  - type: regex
+    name: abre un issue por el hallazgo
+    pattern: 'gh issue create'
+  - type: regex
+    name: título del issue sin forma de asunto de commit
+    pattern: 'gh issue create[^\n]*--title ["'']?[a-z]+(\([^)]*\))?!?:'
+    match: not_contains
+  - type: regex
+    name: no etiqueta
+    pattern: 'git (-C \S+ )?tag '
+    match: not_contains
+  - type: regex
+    name: no publica la release
+    pattern: 'gh release create'
+    match: not_contains
+  - type: llm
+    name: hallazgo del review
+    criteria: |
+      En el review del diff desde v0.1.0 ve que total() en app/calculo.py ya no suma el primer elemento, abre un issue por ese fallo y la propuesta de versión lo nombra.
+    focus: trace
+  - type: llm
+    name: no sale con el hallazgo abierto
+    criteria: |
+      Al final no publica la versión: recomienda resolver antes el fallo o pide al usuario que diga expresamente que la versión sale con él.
+    focus: trace

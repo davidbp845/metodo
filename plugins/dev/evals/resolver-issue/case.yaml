@@ -1,0 +1,49 @@
+schema_version: "1.0"
+name: resolver-issue
+description: In progress, plan comentado, implementación con test, commit local con pie, revisar-docs y cierre a In review
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje. Los comandos de Verificación cuéntalos como ejecutados y pasados."
+  prompt: |
+    Usa el skill dev:resolver-issue con el issue 7. El issue está abierto y en Ready, sin comentarios. Título: "total() falla si la lista lleva None". Cuerpo: total() de app/calculo.py lanza TypeError cuando algún elemento es None; debe ignorar los None. En el tablero hay 2 issues en In review.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: resolver-issue
+  - type: regex
+    name: pasa a In progress
+    pattern: 'item-edit[^\n]*In progress'
+  - type: regex
+    name: comenta el plan
+    pattern: 'gh issue comment 7'
+  - type: regex
+    name: commit local con pie Issue
+    pattern: 'git (-C \S+ )?commit[\s\S]*Issue: #7'
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains
+  - type: tool_used
+    name: invoca revisar-docs
+    tool: Skill
+    input_match: revisar-docs
+  - type: tool_used
+    name: invoca cerrar-issue
+    tool: Skill
+    input_match: cerrar-issue
+  - type: regex
+    name: nunca Done
+    pattern: 'gh project item-edit[^\n]*Done'
+    match: not_contains
+  - type: llm
+    name: orden del ciclo
+    criteria: |
+      En la evaluación ningún comando se ejecuta: el orden de los comandos `gh` y `git` se juzga por el bloque `sh` del último mensaje, no por el momento en que se editan los ficheros. En ese bloque, los comandos van en este orden: pasar el issue 7 a In progress, comentar el plan, y solo después el commit local, el comentario de cierre, gh issue close 7 y el paso a In review. El código de app/calculo.py ignora los None y hay un test nuevo para ese caso.
+    focus: trace

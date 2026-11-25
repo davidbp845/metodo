@@ -1,0 +1,48 @@
+schema_version: "1.0"
+name: sprint
+description: Un issue visual sin visto bueno al mockup se queda en Ready con el mockup enlazado; el siguiente se implementa y cierra
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 40
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell ni publica Artifacts, y el tablero y el repo de GitHub no existen. Un mockup se escribe como fichero HTML en doc/ y se enlaza por su ruta. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el número del issue y el nombre del Status, por ejemplo `<item 20>` u `<opción In progress>`. No pidas confirmación: lo que preguntarías ya está en el mensaje. Los comandos de Verificación cuéntalos como ejecutados y pasados."
+  prompt: |
+    Usa el skill dev:sprint. En Ready hay dos issues, en este orden, ninguno con comentarios:
+    - #20 "Botón de enviar del pedido más visible": el botón de templates/pedido.html pasa a ser grande, con el color de acento y ancho completo en móvil.
+    - #21 "total() falla si la lista lleva None": total() de app/calculo.py lanza TypeError cuando algún elemento es None; debe ignorar los None.
+    En el tablero hay 2 issues en In review.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: sprint
+  - type: regex
+    name: comenta el mockup en el 20
+    pattern: 'gh issue comment 20'
+  - type: regex
+    name: no cierra el 20
+    pattern: 'gh issue close 20'
+    match: not_contains
+  - type: regex
+    name: no toca templates/
+    pattern: 'git (-C \S+ )?add[^\n]*templates'
+    match: not_contains
+  - type: regex
+    name: cierra el 21
+    pattern: 'gh issue close 21'
+  - type: regex
+    name: commit local con pie del 21
+    pattern: 'git (-C \S+ )?commit[\s\S]*Issue: #21'
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains
+  - type: llm
+    name: C3 sin visto bueno
+    criteria: |
+      En la evaluación ningún comando se ejecuta: los comandos `gh` y `git` se juzgan por el bloque `sh` del último mensaje. El issue 20 no se implementa: templates/pedido.html no cambia, el 20 no pasa a In progress, y su comentario enlaza un mockup y pide el visto bueno del usuario. El resumen final lo lista como pendiente del visto bueno de su mockup. El issue 21 sí se implementa (app/calculo.py ignora los None, con test) y se cierra a In review.
+    focus: trace

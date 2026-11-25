@@ -1,0 +1,204 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout -b *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git status *)",
+      "Bash(git stash *)",
+      "Bash(git branch *)",
+      "Bash(git show *)",
+      "Bash(git fetch *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(gh issue *)",
+      "Bash(gh pr *)",
+      "Bash(gh project *)",
+      "Bash(gh label *)",
+      "Bash(gh run *)",
+      "Bash(gh secret list *)",
+      "Bash(pytest *)",
+      "Bash(python -m pytest *)",
+      "Bash(ruff check *)",
+      "Bash(ruff format *)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(pip install -r requirements-dev.txt)",
+      "Bash(venv/bin/python *)",
+      "Bash(venv/bin/pip *)",
+      "Bash(venv/bin/pytest *)",
+      "Bash(venv/bin/ruff check *)",
+      "Bash(venv/bin/ruff format *)",
+      "Bash(venv/bin/mypy *)",
+      "Bash(grep *)",
+      "Bash(which *)",
+      "Bash(kill *)",
+      "Bash(pkill *)",
+      "Bash(ps *)",
+      "Bash(curl -s *)",
+      "Bash(node -e *)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(cat *)",
+      "Bash(wc *)",
+      "Bash(jq *)",
+      "Edit(/{{DATA}}/Metodo/**)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -fd*)",
+      "Bash(git -C * push --force *)",
+      "Bash(git -C * reset --hard *)",
+      "Bash(git -C * clean -fd*)",
+      "Bash(git push*--force*)",
+      "Bash(git push* -f*)",
+      "Bash(git push*+*)",
+      "Bash(git -C * push*--force*)",
+      "Bash(git -C * push* -f*)",
+      "Bash(git clean -df*)",
+      "Bash(git clean -xfd*)",
+      "Bash(git clean -xdf*)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(rm -r -f *)",
+      "Bash(rm -f -r *)",
+      "Bash(rm --recursive*)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.development)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.production)",
+      "Read(**/secrets/**)",
+      "Edit(**/.env)",
+      "Edit(**/.env.local)",
+      "Edit(**/.env.development)",
+      "Edit(**/.env.staging)",
+      "Edit(**/.env.production)",
+      "Bash(cat *.env)",
+      "Bash(cat *.env.local)",
+      "Bash(cat *.env.development)",
+      "Bash(cat *.env.staging)",
+      "Bash(cat *.env.production)",
+      "Bash(cat *secrets/*)",
+      "Bash(head *.env)",
+      "Bash(head *.env.local)",
+      "Bash(head *.env.development)",
+      "Bash(head *.env.staging)",
+      "Bash(head *.env.production)",
+      "Bash(head *secrets/*)",
+      "Bash(tail *.env)",
+      "Bash(tail *.env.local)",
+      "Bash(tail *.env.development)",
+      "Bash(tail *.env.staging)",
+      "Bash(tail *.env.production)",
+      "Bash(tail *secrets/*)",
+      "Bash(grep *.env)",
+      "Bash(grep *.env.local)",
+      "Bash(grep *.env.development)",
+      "Bash(grep *.env.staging)",
+      "Bash(grep *.env.production)",
+      "Bash(grep *secrets/*)",
+      "Bash(jq *.env)",
+      "Bash(jq *.env.local)",
+      "Bash(jq *.env.development)",
+      "Bash(jq *.env.staging)",
+      "Bash(jq *.env.production)",
+      "Bash(jq *secrets/*)"
+    ],
+    "ask": [
+      "Bash(gh pr merge *)",
+      "Bash(gh issue delete *)",
+      "Bash(npm publish *)",
+      "Bash(npm version *)",
+      "Bash(npm install -g*)",
+      "Bash(npm i -g*)",
+      "Bash(git push*--delete*)",
+      "Bash(gh pr close*)",
+      "Bash(gh pr reopen*)",
+      "Bash(gh issue reopen*)",
+      "Bash(gh label delete*)",
+      "Edit(**/.github/workflows/**)",
+      "Edit(**/CLAUDE.md)",
+      "Edit(**/.claude/**)"
+    ],
+    "additionalDirectories": [
+      "{{DATA_NATIVA}}/Metodo",
+      "~/.cache/huggingface",
+      "~/.cache/torch"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/recordar-retro-metodo.sh \"{{DATA_NATIVA}}/Metodo\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // empty' | grep -Eq '^[[:space:]]*cd[[:space:]]+\"?\\$\\(git rev-parse[[:space:]]+--show-toplevel\\)\"?' && printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Redundante: el cwd ya es la raiz del repo y persiste entre llamadas Bash. Ejecuta el comando directamente, sin el prefijo cd \\\"$(git rev-parse --show-toplevel)\\\".\"}}' || true",
+            "statusMessage": "Comprobando prefijo cd redundante..."
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/git-push-borrar-rama.sh",
+            "statusMessage": "Comprobando borrado de rama remota..."
+          }
+        ]
+      }
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "metodo": {
+      "source": {
+        "source": "directory",
+        "path": "{{DATA_NATIVA}}/Metodo"
+      }
+    }
+  },
+  "theme": "dark",
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: assume private unless the remote host and repo name indicate otherwise, or a visibility check in the transcript shows public — no remotes configured for this repo",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: (unknown — origin/HEAD unset; no remotes configured)",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: The trusted repo is whichever git repository the agent started in for this session — no fixed value stored globally; re-derive from the actual working directory each session.",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries prod or production as a whole word or name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries prod or production as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development",
+      "**Trusted repo**: The git repository the agent started in this session (not hardcoded here) — treat as private unless a visibility check in the transcript shows otherwise.",
+      "**Org-specific CLIs**: None configured"
+    ]
+  },
+  "enabledPlugins": {
+    "dev@metodo": true
+  }
+}

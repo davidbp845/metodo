@@ -1,0 +1,23 @@
+{
+  "description": "Latido del issue en curso (scripts/latido.sh) y reglas comprobables del Método: commits (hook-git.sh: rechaza git add -A, commit -a y asuntos fuera de formato, y pide confirmación para un feat o fix sin pie Issue:), Done con confirmación (hook-done.sh), fichero de modo demo con confirmación (hook-demo.sh) y formateador del proyecto (hook-formateador.sh)",
+  "hooks": {
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/latido.sh hook", "timeout": 10 }] }],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/hook-git.sh", "timeout": 10 },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/hook-done.sh", "timeout": 15 },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/hook-demo.sh", "timeout": 10 }
+        ]
+      },
+      { "matcher": "Edit|Write|MultiEdit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/hook-demo.sh", "timeout": 10 }] }
+    ],
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/latido.sh hook", "timeout": 10 }] },
+      { "matcher": "Edit|Write|MultiEdit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/hook-formateador.sh", "timeout": 60 }] }
+    ],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/latido.sh hook", "timeout": 10 }] }],
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/latido.sh hook", "timeout": 10 }] }]
+  }
+}

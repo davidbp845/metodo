@@ -1,0 +1,45 @@
+schema_version: "1.0"
+name: sprint-rama
+description: En una rama larga, el sprint solo coge los issues de Ready con la etiqueta de esa rama y deja fuera los de main
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 40
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell ni publica Artifacts, y el tablero y el repo de GitHub no existen. Un mockup se escribe como fichero HTML en doc/ y se enlaza por su ruta. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el número del issue y el nombre del Status, por ejemplo `<item 20>` u `<opción In progress>`. No pidas confirmación: lo que preguntarías ya está en el mensaje. Los comandos de Verificación cuéntalos como ejecutados y pasados."
+  prompt: |
+    Usa el skill dev:sprint. La carpeta del código está en la rama `reserva` (`git branch --show-current`); la principal es `main`. En Ready hay dos issues, en este orden, ninguno con comentarios:
+    - #31 "Texto de la portada": cambiar el título de la portada. Sin etiqueta de rama, solo `frontend` y `enhancement`.
+    - #30 "total() falla si la lista lleva None": total() de app/calculo.py lanza TypeError cuando algún elemento es None; debe ignorar los None. Etiquetas `bug`, `datos` y `rama:reserva`.
+    En el tablero hay 2 issues en In review.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: sprint
+  - type: regex
+    name: cierra el 30
+    pattern: 'gh issue close 30'
+  - type: regex
+    name: commit local con pie del 30
+    pattern: 'git (-C \S+ )?commit[\s\S]*Issue: #30'
+  - type: regex
+    name: no toca el 31
+    pattern: 'gh issue (close|comment) 31'
+    match: not_contains
+  - type: regex
+    name: no cambia a main
+    pattern: 'git (-C \S+ )?(checkout|switch) main'
+    match: not_contains
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains
+  - type: llm
+    name: solo los de la rama
+    criteria: |
+      En la evaluación ningún comando se ejecuta: los comandos `gh` y `git` se juzgan por el bloque `sh` del último mensaje. El issue 30 (etiqueta rama:reserva) se implementa en la rama `reserva` (app/calculo.py ignora los None, con test), con commit local, y se cierra a In review. El issue 31 (sin etiqueta de rama, es de main) no pasa a In progress, no se implementa ni se comenta, y el resumen final lo lista como fuera del sprint por ser de otra rama. Nada se integra en main.
+    focus: trace

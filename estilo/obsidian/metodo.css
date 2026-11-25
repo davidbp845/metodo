@@ -1,0 +1,92 @@
+/*
+ * Formato común de las bóvedas de Obsidian del método.
+ * Texto a 65 caracteres y centrado; cada tabla mide lo que necesita, centrada y como mucho
+ * el ancho del panel (una de dos columnas queda compacta, una de muchas usa todo el ancho);
+ * los bloques de código empiezan alineados con el texto y crecen hacia la derecha.
+ * Solo actúa con "Longitud de línea legible" activada (Ajustes → Editor).
+ * Ajusta el ancho del texto cambiando --ancho-texto.
+ */
+body {
+  --ancho-texto: 65ch;
+}
+
+/* Tablas compactas: letra y márgenes menores para que quepan muchas columnas sin scroll horizontal */
+.markdown-rendered table,
+.markdown-source-view table {
+  font-size: 0.78em;
+  line-height: 1.25;
+}
+
+.markdown-rendered table th,
+.markdown-rendered table td,
+.markdown-source-view table th,
+.markdown-source-view table td {
+  padding: 4px 8px;
+  white-space: normal;
+}
+
+/* Edición (vista previa en vivo y código fuente) */
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-sizer,
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-content {
+  max-width: none;
+}
+
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-sizer > .inline-title,
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-sizer > .metadata-container,
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-line {
+  max-width: var(--ancho-texto);
+  margin-inline: auto;
+}
+
+/* Obsidian declara el contenedor de propiedades con `container-type: inline-size`: su ancho
+   no sale del contenido y, con márgenes automáticos, se encogería a 0 */
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-sizer > .metadata-container {
+  width: 100%;
+}
+
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-table-widget .cm-line {
+  max-width: none;
+}
+
+/* El !important hace falta porque Obsidian fija `.cm-content > * { margin: 0 !important }` */
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-table-widget {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto !important;
+}
+
+/* Bloques de código en edición: cada línea es un .cm-line con clase HyperMD-codeblock */
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-line.HyperMD-codeblock {
+  max-width: none;
+  margin-inline-start: max(0px, calc((100% - var(--ancho-texto)) / 2));
+  margin-inline-end: 0;
+}
+
+/* Lectura */
+.markdown-preview-view.is-readable-line-width .markdown-preview-sizer {
+  max-width: none;
+}
+
+.markdown-preview-view.is-readable-line-width .markdown-preview-sizer > div:not(.el-table):not(.el-pre) {
+  max-width: var(--ancho-texto);
+  margin-inline: auto;
+}
+
+.markdown-preview-view.is-readable-line-width .markdown-preview-sizer > .el-table {
+  overflow-x: auto;
+}
+
+.markdown-preview-view.is-readable-line-width .markdown-preview-sizer > .el-table > table {
+  margin-inline: auto;
+}
+
+.markdown-preview-view.is-readable-line-width .markdown-preview-sizer > .el-pre {
+  max-width: none;
+  margin-inline-start: max(0px, calc((100% - var(--ancho-texto)) / 2));
+}
+
+.markdown-preview-view.is-readable-line-width .markdown-preview-sizer > .el-pre > pre {
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}

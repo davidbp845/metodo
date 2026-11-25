@@ -1,0 +1,1 @@
+../publicar-version/proyecto.sh

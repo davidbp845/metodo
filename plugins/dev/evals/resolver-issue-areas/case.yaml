@@ -1,0 +1,41 @@
+schema_version: "1.0"
+name: resolver-issue-areas
+description: Un issue de un área de Repos por área se resuelve en el repo y la carpeta de esa área, sin la Verificación general
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje. Los comandos de Verificación cuéntalos como ejecutados y pasados."
+  prompt: |
+    Usa el skill dev:resolver-issue con el issue 4. En el tablero, el item del issue 4 es del repo ejemplo/negocio (ningún otro repo tiene un issue 4 en el tablero); está abierto y en Ready, con la etiqueta marketing y sin comentarios. Título: "Borrador del post de lanzamiento". Cuerpo: escribir en posts/lanzamiento.md un borrador corto del post de LinkedIn que anuncia la app. En el tablero hay 2 issues en In review.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: resolver-issue
+  - type: regex
+    name: comenta en el repo del área
+    pattern: 'gh issue comment[^\n]*-R ejemplo/negocio|gh -R ejemplo/negocio issue comment'
+  - type: regex
+    name: cierra en el repo del área
+    pattern: 'gh issue close[^\n]*-R ejemplo/negocio|gh -R ejemplo/negocio issue close'
+  - type: regex
+    name: commit en la carpeta del área con pie
+    pattern: 'git -C \S*negocio/? commit[\s\S]*Issue: #4'
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains
+  - type: regex
+    name: nunca Done
+    pattern: 'gh project item-edit[^\n]*Done'
+    match: not_contains
+  - type: llm
+    name: área sin Verificación
+    criteria: |
+      En la evaluación ningún comando se ejecuta: los comandos `gh` y `git` se juzgan por el bloque `sh` del último mensaje. El borrador queda en negocio/posts/lanzamiento.md, no en la raíz ni en app/. Ningún comando `gh` del issue 4 va sin `-R ejemplo/negocio`. Como el área marketing no tiene Verificación propia, no se pasa `venv/bin/pytest`, y el comentario de cierre dice qué tiene que revisar el usuario en In review.
+    focus: trace

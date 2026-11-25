@@ -1,0 +1,41 @@
+schema_version: "1.0"
+name: crear-issue
+description: Crea un bug en Backlog, con etiqueta de tipo y de área, tras buscar duplicados
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 15
+  allowed_tools: [Read, Glob, Grep, Skill]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje."
+  prompt: |
+    Usa el skill dev:crear-issue para este problema: total() de app/calculo.py no suma los gastos de envío, así que el total del carrito sale más bajo de lo que se cobra. Es un bug del área datos. Para la simulación: la búsqueda de duplicados no devuelve nada. En el repo existen las etiquetas bug, enhancement, documentation, frontend y datos.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: crear-issue
+  - type: regex
+    name: busca duplicados
+    pattern: 'gh issue list[^\n]*--search'
+  - type: regex
+    name: crea el issue
+    pattern: 'gh issue create'
+  - type: regex
+    name: lo añade al tablero del Método
+    pattern: 'gh project item-add 1 [^\n]*--owner ejemplo'
+  - type: regex
+    name: Status Backlog
+    pattern: 'item-edit[^\n]*Backlog'
+  - type: regex
+    name: ningún otro Status
+    pattern: 'item-edit[^\n]*(Ready|In progress|In review|Done)'
+    match: not_contains
+  - type: regex
+    name: etiquetas de tipo y de área
+    pattern: '--label[^\n]*bug[^\n]*datos|--label[^\n]*datos[^\n]*bug|--label bug[^\n]*--label datos|--label datos[^\n]*--label bug'
+  - type: regex
+    name: no crea etiquetas
+    pattern: 'gh label create'
+    match: not_contains

@@ -1,0 +1,32 @@
+schema_version: "1.0"
+name: cerrar-issue
+description: Comenta la verificación, cierra y pasa a In review, nunca a Done
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 15
+  allowed_tools: [Read, Glob, Grep, Skill]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje."
+  prompt: |
+    Usa el skill dev:cerrar-issue para cerrar el issue 12. Está implementado en el commit abc1234 y verificado: venv/bin/pytest pasa los 5 tests, y he probado a mano el total del carrito con envío.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: cerrar-issue
+  - type: regex
+    name: comenta antes de cerrar
+    pattern: 'gh issue comment 12[\s\S]*gh issue close 12'
+  - type: regex
+    name: Status In review
+    pattern: 'item-edit[^\n]*In review'
+  - type: regex
+    name: nunca Done
+    pattern: 'gh project item-edit[^\n]*Done'
+    match: not_contains
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains

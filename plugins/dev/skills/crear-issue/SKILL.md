@@ -1,0 +1,17 @@
+---
+name: crear-issue
+description: Crea un issue en el tablero del proyecto
+argument-hint: título breve o descripción del problema
+---
+Crea un issue de GitHub para "$ARGUMENTS". Lee antes la sección `## Método` del `CLAUDE.md` del proyecto (tablero, etiquetas de área, metodología).
+
+Si `## Método` indica **Repo**, todos los comandos `gh` llevan `-R <repo>`, y `doc/`, el código, la Verificación y los commits son los de la carpeta que indica, no los de la raíz del proyecto. Con **Repos por área**, el repo, la carpeta y la Verificación son los del área del issue, con las reglas de [Repos por área](../../README.md#repos-por-área).
+
+1. Antes de redactar, busca si ya existe un issue abierto para lo mismo (`gh issue list --search '<términos clave>' --state open --json number,title`) y si la documentación del proyecto ya lo recoge (visión, ampliaciones futuras, ADR). Si lo hay, dilo y pregunta en vez de duplicar. Si lo que se pide choca con una ADR vigente, la ADR no frena la idea: nómbrala y propón sustituirla con `/dev:crear-decision`, con tu recomendación.
+2. Redacta el cuerpo: situación/diagnóstico (qué pasa o qué falta) + plan (qué se va a hacer). Si el proyecto tiene Metodología, sigue en su lugar el índice del cuerpo del issue de C1: el de la parte común (`metodologia.md` de la carpeta del plugin, dos niveles por encima de la carpeta base de este skill) con los ajustes del documento del proyecto (p. ej. las capas del alcance o las etapas de diseño que hará falta pasar). Si ya existe un documento de análisis que lo cubre, el cuerpo es corto: situación en 1–2 frases, enlace al documento y plan en bullets. Si el plan cambia comportamiento ya cubierto por un test, anota qué tests puede dejar obsoletos, no solo cuáles hará falta añadir.
+3. Añádelo al proyecto GitHub del tablero (`gh project item-add <número> --owner <owner> --url <issue>`): un issue fuera del proyecto no aparece en el tablero. Si falla con "Content already exists", el proyecto lo añadió solo (flujo automático del tablero): no es un error; localiza el item con `gh project item-list <número> --owner <owner> --format json`, filtrando por el número del issue, y sigue.
+4. Pon Status = **Backlog**, salvo que el usuario pida otro para este issue.
+5. Etiquétalo con etiquetas que ya existan en el repo (`gh label list --json name,description`), sin crear nuevas sin preguntar: una de tipo (`bug`, `enhancement`, o `documentation` si solo cambia documentación) y una o más de área según lo que toque el plan. Si `## Método` indica **Etiquetas de tipo: solo bug**, la de tipo solo se pone cuando es un bug; `documentation`, si el proyecto la usa como área, cuenta como tal. Si la rama actual de la carpeta del código (`git branch --show-current`) no es la principal (la de `origin/HEAD`; sin remoto, `main` o `master`, la que exista), el issue lleva además `rama:<rama actual>` (ver [Ramas largas](../../README.md#ramas-largas)), salvo que el usuario diga que va a main; si esa etiqueta aún no existe, pregunta antes de crearla. Un issue de main no lleva etiqueta de rama. Las de Dependabot (`dependencies`, `python`, `javascript`, `github_actions`) no son para issues a mano. Con **Repos por área**, la etiqueta de área se decide antes de crear el issue: de ella sale el repo donde se abre (`gh issue create -R <repo del área>`).
+6. Confirma con un resumen: número, título, Status, etiquetas y enlace.
+
+Si falta información clave para el diagnóstico o el plan, pregunta antes de crear el issue en vez de rellenar con suposiciones.

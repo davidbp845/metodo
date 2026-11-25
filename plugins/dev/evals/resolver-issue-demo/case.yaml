@@ -1,0 +1,42 @@
+schema_version: "1.0"
+name: resolver-issue-demo
+description: En un proyecto con campo Demo, un cambio visible se comprueba en demo con la Variable, sin tocar el fichero de modo ni los datos reales
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos de la sesión (`gh`, `git` y las órdenes con las que verificas el cambio), incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje. Los comandos de Verificación y las órdenes que lances cuéntalos como ejecutados y pasados."
+  prompt: |
+    Usa el skill dev:resolver-issue con el issue 8. El issue está abierto y en Ready, sin comentarios. Título: "El listado muestra el total de cada pedido". Cuerpo: el listado de app/listado.py enseña solo el cliente; cada línea debe acabar en el total del pedido con dos decimales, por ejemplo "Ana Ejemplo: 12.50", y un pedido sin líneas da 0.00. En el tablero hay 2 issues en In review.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: resolver-issue
+  - type: regex
+    name: verifica con la Variable de demo
+    pattern: 'APP_MODO=demo|start\.sh --demo'
+  - type: regex
+    name: no cambia el fichero de modo
+    pattern: 'modo = \\?"demo\\?"[^\n]*>|sed[^\n]*configuracion\.toml|>[^\n]*configuracion\.toml'
+    match: not_contains
+  - type: regex
+    name: commit local con pie Issue
+    pattern: 'git (-C \S+ )?commit[\s\S]*Issue: #8'
+  - type: regex
+    name: sin push
+    pattern: 'git (-C \S+ )?push'
+    match: not_contains
+  - type: tool_used
+    name: invoca cerrar-issue
+    tool: Skill
+    input_match: cerrar-issue
+  - type: llm
+    name: demo sin datos reales
+    criteria: |
+      En la evaluación ningún comando se ejecuta: las órdenes se juzgan por el bloque `sh` del último mensaje y las ediciones por las llamadas a Edit y Write. app/listado.py muestra el total de cada pedido con dos decimales, con un test. El cambio visible se comprueba en modo demo: con `APP_MODO=demo` en la orden o con `./start.sh --demo`. Ninguna orden ejecuta el listado contra los datos reales para verificar (sin la Variable ni --demo), nada edita configuracion.toml ni lo que hay en datos/, y el issue se cierra a In review, nunca a Done.
+    focus: trace

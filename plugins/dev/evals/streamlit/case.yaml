@@ -1,0 +1,49 @@
+schema_version: "1.0"
+name: streamlit
+description: Revisa una app Streamlit contra la guía y abre un solo issue con una casilla por regla incumplida
+tags: [dev]
+runs: 2
+context:
+  scaffold_script: proyecto.sh
+execution:
+  max_turns: 25
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill]
+  append_system_prompt: "Esto es una evaluación. Ninguna herramienta ejecuta comandos de shell, y el tablero y el repo de GitHub no existen. Sigue el skill como lo harías de verdad, pero en vez de ejecutar cada comando `gh` o `git`, apúntalo. Tu último mensaje termina con un bloque `sh` con todos los comandos `gh` y `git` de la sesión, incluidos los de los skills que invoques, cada uno en una línea y en el orden en que los lanzarías. Si un comando necesita un dato que saldría de otro anterior (un id de item, de campo o de opción), pon un marcador entre `<>` con el nombre del Status, por ejemplo `<opción Backlog>`. No pidas confirmación: lo que preguntarías ya está en el mensaje."
+  prompt: |
+    Usa el skill dev:streamlit con el argumento revisar sobre la app de este proyecto. Para la simulación: la versión instalada de Streamlit es la 1.66, la búsqueda de duplicados no devuelve nada y en el repo existen las etiquetas bug, enhancement, documentation, frontend y datos. En el bloque final, `gh issue create` lleva el cuerpo en línea con `--body $'…'` (con `\n` para los saltos de línea), no en un fichero.
+graders:
+  - type: tool_used
+    name: carga el skill
+    tool: Skill
+    input_match: streamlit
+  - type: regex
+    name: crea el issue
+    pattern: 'gh issue create'
+  - type: regex
+    name: lo añade al tablero en Backlog
+    pattern: 'gh project item-add 1 [^\n]*--owner ejemplo[\s\S]*item-edit[^\n]*Backlog'
+  - type: regex
+    name: no toca código
+    pattern: 'git (-C \S+ )?(commit|push)'
+    match: not_contains
+  - type: regex
+    name: crea un solo issue
+    pattern: '\ngh issue create[\s\S]*\ngh issue create'
+    match: not_contains
+  - type: regex
+    name: casilla A1 (icono)
+    pattern: 'gh issue create[^\n]*- \[ \] \*\*A1\*\*'
+  - type: regex
+    name: casilla A2 (pestañas)
+    pattern: 'gh issue create[^\n]*- \[ \] \*\*A2\*\*[^\n]*st\.tabs'
+  - type: regex
+    name: casilla A5 (toolbarMode)
+    pattern: 'gh issue create[^\n]*- \[ \] \*\*A5\*\*[^\n]*minimal'
+  - type: regex
+    name: casilla A7 (búsqueda)
+    pattern: 'gh issue create[^\n]*- \[ \] \*\*A7\*\*'
+  - type: regex
+    name: sin casilla A8 (un solo idioma)
+    pattern: 'gh issue create[^\n]*\*\*A8\*\*'
+    match: not_contains

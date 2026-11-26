@@ -27,6 +27,7 @@ Se generan desde `maquina/` con `instalar.sh` (ver `README.md`); no se editan a 
 | `<config>/plugins/installed_plugins.json` | Plugins instalados y su alcance: `dev@metodo` a nivel de usuario, `marketing@metodo` solo en los proyectos que lo activan |
 | `<config>/plugins/cache/`, `marketplaces/`, `data/` | Copias de los plugins y sus datos de trabajo |
 | `<config>/plugins/synced`, `<config>/skills/synced` | Plugins y skills sincronizados desde la cuenta de claude.ai |
+| `<config>/channels/telegram/` | Estado del [canal de Telegram](README.md#canal-de-telegram): `.env` con el token del bot (se escribe a mano) y `access.json` con quién puede escribirle |
 
 ### Memoria y sesiones
 

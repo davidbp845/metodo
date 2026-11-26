@@ -59,10 +59,10 @@ Un bot de Telegram conectado a una sesión de Claude Code sirve para abrir issue
 
 1. Instalar [Bun](https://bun.sh), con el que corre el servidor del plugin, y el plugin: `/plugin install telegram@claude-plugins-official`.
 2. Crear el bot con [@BotFather](https://t.me/BotFather) (`/newbot`) y poner a mano el token que devuelve, `TELEGRAM_BOT_TOKEN=<token>`, en `~/.claude/channels/telegram/.env` o en el entorno de la shell. `/telegram:configure` no sirve: escribe ese `.env` y la regla `Edit(**/.env)` lo bloquea.
-3. Arrancar la sesión en la carpeta de datos: `claude --channels plugin:telegram@claude-plugins-official`.
+3. Arrancar la sesión en la carpeta de datos: `claude --channels plugin:telegram@claude-plugins-official`, y comprobar con `/mcp` que el servidor `telegram` sale conectado; si sale con un aspa, «reconnect». La sesión se deja abierta: el bot solo contesta mientras lo está, y lo que se le escribe con ella cerrada se pierde.
 4. Escribir al bot, que contesta con un código, y emparejarlo en la sesión con `/telegram:access pair <código>`. Después, `/telegram:access policy allowlist`, para que el bot no conteste a nadie más.
 
-`settings.plantilla.json` deja usar sin preguntar las respuestas, reacciones y ediciones del bot, y el `CLAUDE.md` global no cuenta este canal como servicio externo. Descargar un adjunto sigue pidiendo permiso.
+`settings.plantilla.json` deja usar sin preguntar las respuestas, reacciones y ediciones del bot, y el `CLAUDE.md` global no cuenta este canal como servicio externo. Descargar un adjunto sigue pidiendo permiso; las fotos no pasan por ahí, porque el plugin las descarga solo, pero sí lo que se manda como archivo.
 
 ## Reglas de una sola máquina
 

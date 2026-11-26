@@ -24,6 +24,7 @@ Se instala con `/plugin install dev --marketplace davidbp845/metodo`.
 | `/dev:revisar-docs` | Comprueba que la documentación sigue al día tras un cambio |
 | `/dev:publicar-version` | Revisa el diff desde la última etiqueta y abre un issue por hallazgo, propone patch o minor, sube el número, etiqueta y publica la release de GitHub, con confirmación antes de etiquetar |
 | `/dev:streamlit` | Carga la guía de apps Streamlit del Método o, con `revisar`, contrasta una app con ella y abre un issue con las reglas que no cumple |
+| `/dev:cosechar` | Busca en las apps Streamlit de todos los proyectos con `## Método` soluciones repetidas en dos o más proyectos que la guía no recoge y abre un issue por patrón, con la evidencia en `local/cosechas/`; desde el repo del método |
 | `dev:developing-with-streamlit` | Guía de Streamlit de la versión instalada en el proyecto (se carga antes de tocar un panel; no es un comando) |
 
 ## Metodología en tres niveles

@@ -53,6 +53,17 @@ La sesión trabaja en el checkout del proyecto, no en un worktree propio: con `c
 | `desatendido/lanzar.sh --barridos` | Abre la sesión también sin Ready, para que `/dev:siguiente` recorra los barridos. El temporizador no lo hace: costaría una sesión por proyecto en cada pasada |
 | `journalctl --user -u metodo-desatendido` | Lo que decidió en cada proyecto en cada pasada (en macOS, `~/Library/Logs/metodo-desatendido.log`) |
 
+## Canal de Telegram
+
+Un bot de Telegram conectado a una sesión de Claude Code sirve para abrir issues desde el móvil: se le escribe al bot, nombrando el proyecto, y la sesión lo crea en su tablero. Las peticiones de permiso de la sesión también llegan al bot y se aprueban desde allí. La sesión se arranca en la carpeta de datos, así que no carga el `.claude/settings.json`, los hooks ni el `.mcp.json` de ningún proyecto: vale para abrir issues, no para resolverlos (eso lo hacen las [sesiones desatendidas](#sesiones-desatendidas) cuando el issue pasa a Ready).
+
+1. Instalar [Bun](https://bun.sh), con el que corre el servidor del plugin, y el plugin: `/plugin install telegram@claude-plugins-official`.
+2. Crear el bot con [@BotFather](https://t.me/BotFather) (`/newbot`) y poner a mano el token que devuelve, `TELEGRAM_BOT_TOKEN=<token>`, en `~/.claude/channels/telegram/.env` o en el entorno de la shell. `/telegram:configure` no sirve: escribe ese `.env` y la regla `Edit(**/.env)` lo bloquea.
+3. Arrancar la sesión en la carpeta de datos: `claude --channels plugin:telegram@claude-plugins-official`.
+4. Escribir al bot, que contesta con un código, y emparejarlo en la sesión con `/telegram:access pair <código>`. Después, `/telegram:access policy allowlist`, para que el bot no conteste a nadie más.
+
+`settings.plantilla.json` deja usar sin preguntar las respuestas, reacciones y ediciones del bot, y el `CLAUDE.md` global no cuenta este canal como servicio externo. Descargar un adjunto sigue pidiendo permiso.
+
 ## Reglas de una sola máquina
 
 Lo que solo tiene sentido en una máquina (por ejemplo, bloquear una partición de datos personales que solo existe allí) va en `<config>/metodo-maquina.json`, fuera del repo:

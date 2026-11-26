@@ -126,7 +126,9 @@ fires — this section documents intent, not enforcement.
   tracked in git.
 - Running anything that talks to a real external service (calendars, messaging bots,
   payment providers...) unless the project's own docs say its credentials point to a
-  development environment.
+  development environment. The channel the user talks to Claude through (a Telegram bot
+  started with `claude --channels`) is not one: replying, reacting and editing the bot's
+  own messages there needs no confirmation. Downloading an attachment still does.
 
 ## General principle
 If an action is fully contained inside the project's git repository and any mistake can be

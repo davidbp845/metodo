@@ -47,6 +47,9 @@
       "Bash(cat *)",
       "Bash(wc *)",
       "Bash(jq *)",
+      "mcp__plugin_telegram_telegram__reply",
+      "mcp__plugin_telegram_telegram__react",
+      "mcp__plugin_telegram_telegram__edit_message",
       "Edit(/{{DATA}}/Metodo/**)"
     ],
     "deny": [

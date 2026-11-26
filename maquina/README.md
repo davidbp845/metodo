@@ -38,7 +38,7 @@ Un proyecto solo abre sesión si:
 
 1. tiene issues en Ready de su rama actual y la cola de In review no ha llegado a su límite. Lo mira con `gh`, sin gastar una sesión. Los issues que se abren desde el móvil o desde un barrido quedan en Backlog y solo entran cuando se pasan a Ready;
 2. su checkout no tiene cambios sin commitear y nadie tiene abierta una sesión de Claude en la carpeta;
-3. no hay otra ejecución desatendida en marcha en él (un cerrojo por proyecto, un directorio con el pid de quien lo tiene; si ese proceso ya no vive, el cerrojo se recupera).
+3. no hay otra ejecución desatendida en marcha en él (un cerrojo por proyecto, un directorio con el pid de quien lo tiene; si ese pid ya no es un `lanzar.sh`, el cerrojo se recupera).
 
 Cada sesión arranca con `--permission-mode auto`, un tope de gasto (`--max-budget-usd`, 5 USD o lo que diga `METODO_TOPE_USD`) y una instrucción de sistema: nadie puede confirmar nada, así que lo que necesita al usuario se para, se deja dicho en el issue y se sigue con lo demás. Si el proyecto tiene campo `Demo` con Variable, la sesión la lleva en el entorno. Los resultados se ven en GitHub (comentarios del issue y paso a In review) y la salida de cada sesión queda en `~/.local/state/metodo-desatendido/`.
 

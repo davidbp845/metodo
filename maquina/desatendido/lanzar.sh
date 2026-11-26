@@ -68,12 +68,13 @@ sesion_abierta() {
 }
 
 # Cerrojo con mkdir, que es atómico en cualquier sistema (macOS no trae flock). Guarda el pid
-# del dueño: si ese proceso ya no vive (la ejecución se cortó), el cerrojo se recupera.
+# del dueño: si ese proceso ya no es un lanzar.sh (la ejecución se cortó y el sistema puede haber
+# dado el pid a otro), el cerrojo se recupera.
 tomar_cerrojo() {
 	local dueno
 	mkdir "$1" 2>/dev/null && { echo $$ >"$1/pid"; return 0; }
 	dueno=$(cat "$1/pid" 2>/dev/null)
-	if [ -n "$dueno" ] && kill -0 "$dueno" 2>/dev/null; then return 1; fi
+	if [ -n "$dueno" ] && ps -o command= -p "$dueno" 2>/dev/null | grep -q 'lanzar\.sh'; then return 1; fi
 	rm -f "$1/pid"; rmdir "$1" 2>/dev/null
 	mkdir "$1" 2>/dev/null && { echo $$ >"$1/pid"; return 0; }
 	return 1

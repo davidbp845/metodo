@@ -151,11 +151,12 @@ hook)
 mantener)
 	fichero="$DIR/${2:?uso: latido.sh mantener <sesión> <pid de claude>}"
 	# Uno por sesión: cada fin de turno con trabajo de fondo lo lanza otra vez. El cerrojo es un
-	# directorio (mkdir es atómico) con el pid dentro; uno cuyo pid ya no vive se recupera.
+	# directorio (mkdir es atómico) con el pid dentro; uno cuyo pid ya no es un `latido.sh mantener`
+	# (el sistema puede haberlo dado a otro proceso) se recupera.
 	cerrojo="$fichero.cerrojo"
 	if ! mkdir "$cerrojo" 2>/dev/null; then
 		dueno=$(cat "$cerrojo/pid" 2>/dev/null)
-		[ -n "$dueno" ] && kill -0 "$dueno" 2>/dev/null && exit 0
+		[ -n "$dueno" ] && ps -o command= -p "$dueno" 2>/dev/null | grep -q 'latido\.sh mantener' && exit 0
 		rm -f "$cerrojo/pid"; rmdir "$cerrojo" 2>/dev/null
 		mkdir "$cerrojo" 2>/dev/null || exit 0
 	fi

@@ -159,7 +159,7 @@ if [ -n "$owner" ] && [ -n "$numero" ]; then
 			if [ -z "$mas_viejo" ] || [[ "$c" < "$mas_viejo" ]]; then mas_viejo=$c; fi
 		done
 		if [ -n "$mas_viejo" ]; then
-			in_review_dias=$(( (hoy - $(date -u -d "$mas_viejo" +%s)) / 86400 ))
+			in_review_dias=$(( (hoy - $(jq -n --arg d "$mas_viejo" '$d | fromdateiso8601')) / 86400 ))
 		fi
 	fi
 fi
@@ -177,21 +177,26 @@ fi
 # fix que citan un issue cerrado antes de la ventana: señal de verificación insuficiente.
 tardios=null
 if [ "$commits" != null ] && [ -n "$repo" ]; then
-	tardios=()
-	declare -A cerrado_antes=()
+	tardios=
+	# Issues ya consultados, como « n=0 n=1 »: el bash 3.2 de macOS no tiene arrays asociativos.
+	cerrado_antes=' '
 	while read -r h citados; do
 		tardio=0
 		for n in $citados; do
-			if [ -z "${cerrado_antes[$n]+x}" ]; then
+			case "$cerrado_antes" in
+			*" $n="[01]" "*) ;;
+			*)
 				c=$(gh api "repos/$repo/issues/$n" --jq '.closed_at // empty' 2>/dev/null)
-				cerrado_antes[$n]=0
-				[ -n "$c" ] && [[ "$c" < "${inicio}T00:00:00Z" ]] && cerrado_antes[$n]=1
-			fi
-			[ "${cerrado_antes[$n]}" = 1 ] && tardio=1
+				v=0
+				[ -n "$c" ] && [[ "$c" < "${inicio}T00:00:00Z" ]] && v=1
+				cerrado_antes="$cerrado_antes$n=$v "
+				;;
+			esac
+			case "$cerrado_antes" in *" $n=1 "*) tardio=1 ;; esac
 		done
-		[ "$tardio" = 1 ] && tardios+=("$h")
+		[ "$tardio" = 1 ] && tardios="$tardios$h"$'\n'
 	done < <(printf '%s' "$commits" | jq -r '.[] | select(.tipo == "fix" and (.issues | length) > 0) | "\(.h) \(.issues | map(tostring) | join(" "))"')
-	tardios=$(printf '%s\n' "${tardios[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+	tardios=$(printf '%s' "$tardios" | jq -R -s -c 'split("\n") | map(select(length > 0))')
 fi
 
 # En un repo compartido, cada commit va al tablero de los issues que cita; el que no cita

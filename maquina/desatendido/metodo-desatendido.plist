@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Equivalente en macOS de metodo-desatendido.timer: lanza lanzar.sh cada 30 minutos. launchd
+     no abre una ejecución nueva mientras la anterior sigue en marcha. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>metodo.desatendido</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{DATA_NATIVA}}/Metodo/maquina/desatendido/lanzar.sh</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>{{RUTA}}</string>
+	</dict>
+	<key>StartInterval</key>
+	<integer>1800</integer>
+	<key>StandardOutPath</key>
+	<string>{{HOME}}/Library/Logs/metodo-desatendido.log</string>
+	<key>StandardErrorPath</key>
+	<string>{{HOME}}/Library/Logs/metodo-desatendido.log</string>
+</dict>
+</plist>

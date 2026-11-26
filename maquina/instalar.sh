@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Instala la configuración global del método en esta máquina: CLAUDE.md, settings.json
 # y hooks de usuario en el directorio de configuración de Claude Code, y el plugin dev@metodo.
-# Funciona en Linux y en Git Bash (Windows). Uso en maquina/README.md.
+# Funciona en Linux, en macOS (con su bash 3.2) y en Git Bash (Windows). Uso en maquina/README.md.
 set -euo pipefail
 
 uso() {
@@ -11,8 +11,9 @@ Uso: maquina/instalar.sh [--comprobar | --sobrescribir] [--desatendido]
   (sin opción)    escribe los ficheros que faltan; si uno existe y difiere, enseña el diff y para
   --comprobar     solo compara lo generado con lo instalado; sale con 1 si hay diferencias
   --sobrescribir  reemplaza los que difieren, guardando antes una copia <fichero>.bak-AAAAMMDD-HHMMSS
-  --desatendido   incluye el temporizador de systemd de las sesiones desatendidas (solo Linux),
-                  en ~/.config/systemd/user/; activarlo es aparte (lo dice al terminar)
+  --desatendido   incluye el temporizador de las sesiones desatendidas: en Linux, el de systemd
+                  en ~/.config/systemd/user/; en macOS, el agente de launchd en
+                  ~/Library/LaunchAgents/. Activarlo es aparte (lo dice al terminar)
 
 Directorio de configuración: $CLAUDE_CONFIG_DIR, o ~/.claude si no está definido.
 Reglas propias de esta máquina: <config>/metodo-maquina.json (opcional), con la forma
@@ -51,8 +52,8 @@ for dep in git gh jq claude; do
   if ! command -v "$dep" >/dev/null 2>&1; then
     echo "Falta $dep." >&2
     case "$dep" in
-      gh) echo "  Instálalo: https://cli.github.com (Windows: winget install GitHub.cli)" >&2 ;;
-      jq) echo "  Instálalo: Linux, gestor de paquetes; Windows: winget install jqlang.jq" >&2 ;;
+      gh) echo "  Instálalo: https://cli.github.com (macOS: brew install gh; Windows: winget install GitHub.cli)" >&2 ;;
+      jq) echo "  Instálalo: Linux, gestor de paquetes; macOS: brew install jq; Windows: winget install jqlang.jq" >&2 ;;
       claude) echo "  Instálalo: https://code.claude.com/docs/setup" >&2 ;;
     esac
     falta=1
@@ -116,16 +117,23 @@ for h in "$aqui"/hooks/*; do
   destinos+=("hook-$(basename "$h"):$config/hooks/$(basename "$h")")
 done
 
+sistema=$(uname -s)
+agente="$HOME/Library/LaunchAgents/metodo-desatendido.plist"
 if [ "$desatendido" = 1 ]; then
-  command -v systemctl >/dev/null 2>&1 || { echo "--desatendido necesita systemd (solo Linux)." >&2; exit 1; }
-  command -v flock >/dev/null 2>&1 || { echo "--desatendido necesita flock." >&2; exit 1; }
-  # systemd de usuario no hereda el PATH de la shell: se fija con dónde están claude y gh.
-  ruta=$(printf '%s\n' "$(dirname "$(command -v claude)")" "$(dirname "$(command -v gh)")" /usr/local/bin /usr/bin /bin | awk '!visto[$0]++' | paste -sd:)
-  unidades=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
-  for u in metodo-desatendido.service metodo-desatendido.timer; do
-    rellenar "$aqui/desatendido/$u" | sed "s|{{RUTA}}|$ruta|g" > "$tmp/$u"
-    destinos+=("$u:$unidades/$u")
-  done
+  # Ni systemd ni launchd heredan el PATH de la shell: se fija con dónde están claude, gh y jq.
+  ruta=$(printf '%s\n' "$(dirname "$(command -v claude)")" "$(dirname "$(command -v gh)")" "$(dirname "$(command -v jq)")" \
+    /opt/homebrew/bin /usr/local/bin /usr/bin /bin | awk '!visto[$0]++' | paste -sd: -)
+  if [ "$sistema" = Darwin ]; then
+    rellenar "$aqui/desatendido/metodo-desatendido.plist" | sed -e "s|{{RUTA}}|$ruta|g" -e "s|{{HOME}}|$HOME|g" > "$tmp/metodo-desatendido.plist"
+    destinos+=("metodo-desatendido.plist:$agente")
+  else
+    command -v systemctl >/dev/null 2>&1 || { echo "--desatendido necesita systemd en Linux, o launchd en macOS." >&2; exit 1; }
+    unidades=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
+    for u in metodo-desatendido.service metodo-desatendido.timer; do
+      rellenar "$aqui/desatendido/$u" | sed "s|{{RUTA}}|$ruta|g" > "$tmp/$u"
+      destinos+=("$u:$unidades/$u")
+    done
+  fi
 fi
 
 # --- Comparar e instalar ---
@@ -209,9 +217,15 @@ if [ "$difiere" = 1 ] && [ "$modo" = instalar ]; then
 fi
 
 if [ "$desatendido" = 1 ] && [ "$modo" != comprobar ]; then
-  systemctl --user daemon-reload 2>/dev/null || true
-  if ! systemctl --user is-enabled metodo-desatendido.timer >/dev/null 2>&1; then
-    echo "Temporizador instalado, sin activar. Para activarlo: systemctl --user enable --now metodo-desatendido.timer"
+  if [ "$sistema" = Darwin ]; then
+    if ! launchctl print "gui/$(id -u)/metodo.desatendido" >/dev/null 2>&1; then
+      echo "Agente de launchd instalado, sin cargar. Para cargarlo: launchctl bootstrap gui/$(id -u) $agente"
+    fi
+  else
+    systemctl --user daemon-reload 2>/dev/null || true
+    if ! systemctl --user is-enabled metodo-desatendido.timer >/dev/null 2>&1; then
+      echo "Temporizador instalado, sin activar. Para activarlo: systemctl --user enable --now metodo-desatendido.timer"
+    fi
   fi
 fi
 

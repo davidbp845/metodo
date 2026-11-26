@@ -28,17 +28,17 @@ El script comprueba las dependencias, crea los ficheros que faltan, registra los
 | (ninguna) | Instala lo que falta; para si algo difiere |
 | `--comprobar` | Solo compara; sale con 1 si hay diferencias |
 | `--sobrescribir` | Reemplaza lo que difiere, con copia `<fichero>.bak-AAAAMMDD-HHMMSS` |
-| `--desatendido` | Añade el temporizador de las [sesiones desatendidas](#sesiones-desatendidas) (solo Linux); se combina con las otras |
+| `--desatendido` | Añade el temporizador de las [sesiones desatendidas](#sesiones-desatendidas): systemd en Linux, launchd en macOS; se combina con las otras |
 
 ## Sesiones desatendidas
 
-En Linux, un temporizador de systemd de usuario lanza cada 30 minutos `desatendido/lanzar.sh`, que recorre los proyectos con `## Método` (los de `carpetas` de `metodo-maquina.json`, o la carpeta de datos entera) y abre `claude -p "/dev:siguiente"` desde la carpeta de cada uno, para que cargue su `.claude/settings.json`, sus hooks y su `.mcp.json`. `/schedule` no sirve para esto: corre en la nube y no ve el disco.
+Un temporizador lanza cada 30 minutos `desatendido/lanzar.sh` (en Linux, uno de systemd de usuario; en macOS, un agente de launchd), que recorre los proyectos con `## Método` (los de `carpetas` de `metodo-maquina.json`, o la carpeta de datos entera) y abre `claude -p "/dev:siguiente"` desde la carpeta de cada uno, para que cargue su `.claude/settings.json`, sus hooks y su `.mcp.json`. `/schedule` no sirve para esto: corre en la nube y no ve el disco.
 
 Un proyecto solo abre sesión si:
 
 1. tiene issues en Ready de su rama actual y la cola de In review no ha llegado a su límite. Lo mira con `gh`, sin gastar una sesión. Los issues que se abren desde el móvil o desde un barrido quedan en Backlog y solo entran cuando se pasan a Ready;
 2. su checkout no tiene cambios sin commitear y nadie tiene abierta una sesión de Claude en la carpeta;
-3. no hay otra ejecución desatendida en marcha en él (un `flock` por proyecto).
+3. no hay otra ejecución desatendida en marcha en él (un cerrojo por proyecto, un directorio con el pid de quien lo tiene; si ese proceso ya no vive, el cerrojo se recupera).
 
 Cada sesión arranca con `--permission-mode auto`, un tope de gasto (`--max-budget-usd`, 5 USD o lo que diga `METODO_TOPE_USD`) y una instrucción de sistema: nadie puede confirmar nada, así que lo que necesita al usuario se para, se deja dicho en el issue y se sigue con lo demás. Si el proyecto tiene campo `Demo` con Variable, la sesión la lleva en el entorno. Los resultados se ven en GitHub (comentarios del issue y paso a In review) y la salida de cada sesión queda en `~/.local/state/metodo-desatendido/`.
 
@@ -46,11 +46,12 @@ La sesión trabaja en el checkout del proyecto, no en un worktree propio: con `c
 
 | Orden | Qué hace |
 |---|---|
-| `maquina/instalar.sh --desatendido` | Instala el `.service` y el `.timer` en `~/.config/systemd/user/`, con el `PATH` de esta máquina; se combina con `--comprobar` y `--sobrescribir` |
-| `systemctl --user enable --now metodo-desatendido.timer` | Lo activa (y `disable --now` lo para). Para que corra sin sesión gráfica abierta, `loginctl enable-linger` |
+| `maquina/instalar.sh --desatendido` | Instala el `.service` y el `.timer` en `~/.config/systemd/user/` (en macOS, `metodo-desatendido.plist` en `~/Library/LaunchAgents/`), con el `PATH` de esta máquina; se combina con `--comprobar` y `--sobrescribir` |
+| `systemctl --user enable --now metodo-desatendido.timer` | Lo activa en Linux (y `disable --now` lo para). Para que corra sin sesión gráfica abierta, `loginctl enable-linger` |
+| `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/metodo-desatendido.plist` | Lo carga en macOS (y `launchctl bootout gui/$(id -u)/metodo.desatendido` lo para). Corre mientras la sesión del usuario está abierta |
 | `desatendido/lanzar.sh --simular` | Dice qué haría en cada proyecto, sin abrir ninguna sesión |
 | `desatendido/lanzar.sh --barridos` | Abre la sesión también sin Ready, para que `/dev:siguiente` recorra los barridos. El temporizador no lo hace: costaría una sesión por proyecto en cada pasada |
-| `journalctl --user -u metodo-desatendido` | Lo que decidió en cada proyecto en cada pasada |
+| `journalctl --user -u metodo-desatendido` | Lo que decidió en cada proyecto en cada pasada (en macOS, `~/Library/Logs/metodo-desatendido.log`) |
 
 ## Reglas de una sola máquina
 

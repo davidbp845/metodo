@@ -15,7 +15,8 @@ Se generan desde `maquina/` con `instalar.sh` (ver `README.md`); no se editan a 
 | `<config>/metodo-maquina.json` | Carpetas de proyectos, reglas y servidores MCP de usuario de una sola máquina, fuera del repo; las reglas se suman a las de la plantilla y los servidores se registran en `~/.claude.json` |
 | `<config>/hooks/*.sh` | Hooks de usuario, copiados de `maquina/hooks/` |
 | `<config>/*.bak-AAAAMMDD-HHMMSS` | Copias que deja `instalar.sh --sobrescribir` |
-| `~/.config/systemd/user/metodo-desatendido.{service,timer}` | Temporizador de las sesiones desatendidas, desde `maquina/desatendido/` con `instalar.sh --desatendido` (solo Linux) |
+| `~/.config/systemd/user/metodo-desatendido.{service,timer}` | Temporizador de las sesiones desatendidas en Linux, desde `maquina/desatendido/` con `instalar.sh --desatendido` |
+| `~/Library/LaunchAgents/metodo-desatendido.plist` | El mismo temporizador en macOS, como agente de launchd; su salida va a `~/Library/Logs/metodo-desatendido.log` |
 | `~/.claude.json` | Estado de Claude Code: proyectos abiertos, servidores MCP de usuario, preferencias. Lo gestiona Claude Code; `instalar.sh` solo añade o reemplaza los servidores de `metodo-maquina.json` |
 
 ### Plugins

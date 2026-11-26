@@ -21,7 +21,7 @@ inicio=${2:?uso: coste.sh <carpeta> <inicio AAAA-MM-DD>}
 absoluta=$(cd "$carpeta" 2>/dev/null && pwd) || { echo null; exit 0; }
 dir="$HOME/.claude/projects/$(printf '%s' "$absoluta" | sed 's/[^A-Za-z0-9]/-/g')"
 [ -d "$dir" ] || { echo null; exit 0; }
-ini=$(date -u -d "${inicio}T00:00:00Z" +%s)
+ini=$(jq -n --arg d "${inicio}T00:00:00Z" '$d | fromdateiso8601')
 
 # Recorre un registro y suma por clave (número de issue o "sin"). Con $sub, es un subagente: su
 # clave sale del encargo (`sprint/<NN>`) o del tramo de la sesión madre ($seg) en que arranca.
@@ -60,7 +60,8 @@ reduce (inputs | select(.timestamp != null)) as $e ({clave: null, prev: null, vi
 	| .prev = $t)
 | {tot, seg}'
 
-desde=$(date -d "@$ini" '+%Y-%m-%d %H:%M:%S')
+# date -d es de GNU; date -r <segundos>, de BSD (macOS).
+desde=$(date -d "@$ini" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -r "$ini" '+%Y-%m-%d %H:%M:%S')
 {
 	find "$dir" -maxdepth 1 -name '*.jsonl' -newermt "$desde" 2>/dev/null | while IFS= read -r sesion; do
 		madre=$(jq -n -c --argjson sub false --argjson seg '[]' --argjson ini "$ini" "$programa" "$sesion" 2>/dev/null) || {

@@ -39,8 +39,13 @@ while IFS= read -r rel; do
 	[ -n "$rel" ] && carpetas+=("$carpeta/${rel%/}")
 done < <(sed -n '/^## Método/,/^## /p' "$claude_md" | awk '/^- Repos por área:/ { f = 1; next } f && /^- / { exit } f && /^[[:space:]]+- / { print }' |
 	sed -n 's/.* en `\([^`]*\)`.*/\1/p')
-# Dos áreas, o un área y Repo, pueden compartir carpeta: cada una se mira una vez.
-mapfile -t carpetas < <(realpath -m "${carpetas[@]}" | awk '!visto[$0]++')
+# Dos áreas, o un área y Repo, pueden compartir carpeta: cada una se mira una vez. Sin mapfile
+# ni realpath -m, que el bash 3.2 y el sistema de macOS no traen.
+unicas=()
+while IFS= read -r d; do unicas+=("$d"); done < <(for d in "${carpetas[@]}"; do
+	(cd "$d" 2>/dev/null && pwd -P) || printf '%s\n' "$d"
+done | awk '!visto[$0]++')
+carpetas=("${unicas[@]}")
 
 for dir in "${carpetas[@]}"; do
 	# Sin remoto no hay a dónde subir: un contenedor local, por ejemplo.

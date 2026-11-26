@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # SessionStart: avisa cuando toca la retro agregada del método (/dev:retro-metodo), para que la
 # cadencia no dependa de acordarse. La fecha sale del nombre de la última retro guardada en
-# <Metodo>/local/retros/; sin ninguna, avisa siempre.
+# <Metodo>/local/retros/; sin ninguna, avisa siempre. Las fechas se leen con jq, no con date -d,
+# que es de GNU y macOS no trae.
 #
 #   recordar-retro-metodo.sh <carpeta de Metodo> [días entre retros, 14 por defecto]
 metodo=${1:?uso: recordar-retro-metodo.sh <carpeta de Metodo> [días]}
@@ -11,7 +12,7 @@ cadencia=${2:-14}
 ultima=$(find "$metodo/local/retros" -maxdepth 1 -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.md' 2>/dev/null \
 	| sed 's|.*/||; s|\(..........\).*|\1|' | sort | tail -n 1)
 if [ -n "$ultima" ]; then
-	dias=$(( ($(date -u +%s) - $(date -u -d "$ultima" +%s)) / 86400 ))
+	dias=$(( ($(date -u +%s) - $(jq -n --arg d "$ultima" '"\($d)T00:00:00Z" | fromdateiso8601')) / 86400 ))
 	[ "$dias" -ge "$cadencia" ] || exit 0
 	texto="Toca la retro del método: la última es del $ultima, hace $dias días. Se lanza con /dev:retro-metodo desde Metodo."
 else

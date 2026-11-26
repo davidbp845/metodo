@@ -12,6 +12,7 @@
 # Un fichero por sesión guarda una línea por issue en curso (ids del tablero, del item y del
 # campo, y el número del issue): un sprint en paralelo lleva varios a la vez. Su fecha de
 # modificación es la de la última escritura. Sin campo `Latido` en el tablero, `fijar` lo dice y no hace nada.
+# Vale para Linux y para macOS, que no trae setsid ni flock, con su bash 3.2.
 set -u
 
 DIR="${XDG_RUNTIME_DIR:-/tmp}/dev-latido"
@@ -23,19 +24,31 @@ escribir() {
 	local fichero=$1 proyecto item campo issue
 	shift
 	while read -r proyecto item campo issue; do
-		setsid gh project item-edit --project-id "$proyecto" --id "$item" --field-id "$campo" "$@" \
+		desligar gh project item-edit --project-id "$proyecto" --id "$item" --field-id "$campo" "$@" \
 			</dev/null >/dev/null 2>&1 &
 	done <"$fichero"
 }
 
 ahora() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 
+# Proceso fuera de la sesión del hook, para que no muera con ella: setsid y, sin él (macOS), nohup.
+desligar() {
+	if command -v setsid >/dev/null 2>&1; then setsid "$@"; else nohup "$@"; fi
+}
+
+# Fecha de modificación de hace una hora, con la sintaxis de date de GNU o de BSD.
+atrasar() {
+	local t
+	t=$(date -d '1 hour ago' +%Y%m%d%H%M 2>/dev/null || date -v-1H +%Y%m%d%H%M) && touch -t "$t" "$1"
+}
+
 # Proceso `claude` de la sesión: CLAUDE_PID o, si no está, el primer `claude` hacia arriba.
 proceso_claude() {
 	[ -n "${CLAUDE_PID:-}" ] && { echo "$CLAUDE_PID"; return; }
 	local p=$$
 	while [ "${p:-1}" -gt 1 ]; do
-		[ "$(ps -o comm= -p "$p")" = claude ] && { echo "$p"; return; }
+		# En macOS, comm es la ruta entera del ejecutable.
+		[ "$(basename "$(ps -o comm= -p "$p")" 2>/dev/null)" = claude ] && { echo "$p"; return; }
 		p=$(ps -o ppid= -p "$p" | tr -d ' ')
 	done
 	return 1
@@ -122,11 +135,11 @@ hook)
 		claude=$(proceso_claude)
 		if trabajo_de_fondo "$claude"; then
 			# El turno acaba pero el trabajo sigue (tests, evaluaciones...): se mantiene mientras dure.
-			setsid "$0" mantener "$sesion" "$claude" </dev/null >/dev/null 2>&1 &
+			desligar "$0" mantener "$sesion" "$claude" </dev/null >/dev/null 2>&1 &
 		else
 			# Fin del turno: nadie trabaja hasta el siguiente mensaje, que vuelve a escribir sin esperar.
 			escribir "$fichero" --clear
-			touch -d "1 hour ago" "$fichero"
+			atrasar "$fichero"
 		fi
 		;;
 	SessionEnd)
@@ -137,9 +150,16 @@ hook)
 	;;
 mantener)
 	fichero="$DIR/${2:?uso: latido.sh mantener <sesión> <pid de claude>}"
-	# Uno por sesión: cada fin de turno con trabajo de fondo lo lanza otra vez.
-	exec 9>"$fichero.mantener"
-	flock -n 9 || exit 0
+	# Uno por sesión: cada fin de turno con trabajo de fondo lo lanza otra vez. El cerrojo es un
+	# directorio (mkdir es atómico) con el pid dentro; uno cuyo pid ya no vive se recupera.
+	cerrojo="$fichero.cerrojo"
+	if ! mkdir "$cerrojo" 2>/dev/null; then
+		dueno=$(cat "$cerrojo/pid" 2>/dev/null)
+		[ -n "$dueno" ] && kill -0 "$dueno" 2>/dev/null && exit 0
+		rm -f "$cerrojo/pid"; rmdir "$cerrojo" 2>/dev/null
+		mkdir "$cerrojo" 2>/dev/null || exit 0
+	fi
+	echo $$ >"$cerrojo/pid"
 	# Termina sin vaciar el campo: el aviso de fin de la tarea abre un turno, y su Stop lo vacía.
 	while [ -f "$fichero" ] && trabajo_de_fondo "${3:-}"; do
 		if [ -z "$(find "$fichero" -mmin -"$INTERVALO")" ]; then
@@ -148,7 +168,7 @@ mantener)
 		fi
 		sleep 60
 	done
-	rm -f "$fichero.mantener"
+	rm -f "$cerrojo/pid"; rmdir "$cerrojo" 2>/dev/null
 	;;
 *)
 	echo "uso: latido.sh fijar|quitar|hook|mantener" >&2

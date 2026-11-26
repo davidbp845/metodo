@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Sesiones desatendidas: recorre los proyectos con `## Método` y, en cada uno que tenga algo que
 # hacer, abre `claude -p "/dev:siguiente"` desde su carpeta, para que cargue su configuración, sus
-# hooks y su `.mcp.json`. Lo lanza el temporizador de systemd (metodo-desatendido.timer) o se usa a
-# mano. Uso y condiciones en maquina/README.md. Solo Linux: usa `flock` y `/proc`.
+# hooks y su `.mcp.json`. Lo lanza el temporizador de systemd (metodo-desatendido.timer), el agente
+# de launchd en macOS (metodo-desatendido.plist) o se usa a mano. Uso y condiciones en
+# maquina/README.md. Vale para macOS y su bash 3.2: sin flock ni arrays asociativos, y sin /proc fuera de Linux.
 #
 #   lanzar.sh [--barridos] [--simular]
 #
@@ -43,16 +44,41 @@ if [ ${#raices[@]} -eq 0 ]; then raices=("$data"); profundidad=3; else raices+=(
 
 decir() { printf '%s  %s: %s\n' "$(date '+%F %T')" "$1" "$2"; }
 
+# Directorio de trabajo de cada proceso `claude`: de /proc en Linux; sin /proc (macOS), con lsof.
+directorios_claude() {
+	local p
+	if [ -d /proc/self ]; then
+		for p in /proc/[0-9]*; do
+			[ "$(cat "$p/comm" 2>/dev/null)" = claude ] && readlink "$p/cwd" 2>/dev/null
+		done
+	else
+		for p in $(pgrep -x claude 2>/dev/null); do
+			lsof -a -p "$p" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'
+		done
+	fi
+}
+
 # ¿Hay un proceso de Claude Code con el directorio de trabajo dentro de la carpeta?
 sesion_abierta() {
-	local p cwd
-	for p in /proc/[0-9]*; do
-		[ "$(cat "$p/comm" 2>/dev/null)" = claude ] || continue
-		cwd=$(readlink "$p/cwd" 2>/dev/null) || continue
+	local cwd
+	while IFS= read -r cwd; do
 		case "$cwd/" in "$1"/*) return 0 ;; esac
-	done
+	done < <(directorios_claude)
 	return 1
 }
+
+# Cerrojo con mkdir, que es atómico en cualquier sistema (macOS no trae flock). Guarda el pid
+# del dueño: si ese proceso ya no vive (la ejecución se cortó), el cerrojo se recupera.
+tomar_cerrojo() {
+	local dueno
+	mkdir "$1" 2>/dev/null && { echo $$ >"$1/pid"; return 0; }
+	dueno=$(cat "$1/pid" 2>/dev/null)
+	if [ -n "$dueno" ] && kill -0 "$dueno" 2>/dev/null; then return 1; fi
+	rm -f "$1/pid"; rmdir "$1" 2>/dev/null
+	mkdir "$1" 2>/dev/null && { echo $$ >"$1/pid"; return 0; }
+	return 1
+}
+soltar_cerrojo() { rm -f "$1/pid"; rmdir "$1" 2>/dev/null; }
 
 proyecto() {
 	local carpeta=$1 nombre metodo_md owner numero limite codigo rama principal items ready en_revision variable
@@ -92,19 +118,19 @@ proyecto() {
 	if [ "$simular" = 1 ]; then decir "$nombre" "abriría /dev:siguiente ($ready en Ready${variable:+, con $variable})"; return; fi
 
 	# Un cerrojo por proyecto: una ejecución que se alarga no se solapa con la siguiente.
-	local cerrojo="$cerrojos/$(printf '%s' "$carpeta" | sed 's/[^A-Za-z0-9]/-/g').lock"
+	local cerrojo="$cerrojos/$(printf '%s' "$carpeta" | sed 's/[^A-Za-z0-9]/-/g').cerrojo"
 	local registro="$registros/$nombre-$(date +%Y%m%d-%H%M%S).log"
-	(
-		flock -n 9 || { decir "$nombre" "otra ejecución desatendida sigue en marcha"; exit 0; }
-		decir "$nombre" "abre /dev:siguiente ($ready en Ready), registro en $registro"
-		cd "$carpeta" && env ${variable:+"$variable"} claude -p "/dev:siguiente" \
-			--permission-mode auto --max-budget-usd "$tope" --append-system-prompt "$instruccion" \
-			</dev/null >"$registro" 2>&1
-		decir "$nombre" "terminó con código $?"
-	) 9>"$cerrojo"
+	tomar_cerrojo "$cerrojo" || { decir "$nombre" "otra ejecución desatendida sigue en marcha"; return; }
+	decir "$nombre" "abre /dev:siguiente ($ready en Ready), registro en $registro"
+	(cd "$carpeta" && env ${variable:+"$variable"} claude -p "/dev:siguiente" \
+		--permission-mode auto --max-budget-usd "$tope" --append-system-prompt "$instruccion" \
+		</dev/null >"$registro" 2>&1)
+	decir "$nombre" "terminó con código $?"
+	soltar_cerrojo "$cerrojo"
 }
 
 find "${raices[@]}" -maxdepth "$profundidad" -type f -name CLAUDE.md -not -path '*/node_modules/*' 2>/dev/null |
-	xargs -r grep -l '^## Método' 2>/dev/null | sort -u | while IFS= read -r claude_md; do
+	while IFS= read -r claude_md; do grep -q '^## Método' "$claude_md" 2>/dev/null && echo "$claude_md"; done |
+	sort -u | while IFS= read -r claude_md; do
 		proyecto "$(dirname "$claude_md")"
 	done

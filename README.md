@@ -74,4 +74,4 @@ El método va a servir a cualquier persona en Linux, Windows o macOS, cada una c
 En la Lanzadera, el soporte de macOS y el perfil de usuario son los ADR [0018](https://github.com/davidbp845/lanzadera/blob/main/doc/A2-ADR/0018-lanzadera-en-macos.md) y [0019](https://github.com/davidbp845/lanzadera/blob/main/doc/A2-ADR/0019-perfil-de-usuario-final.md), en propuesta. En el método, hoy todavía hay cosas que dan por hecho una sola persona en Linux o Windows:
 
 1. **Un solo papel**: `instalar.sh` instala siempre el plugin `dev` y exige `gh`. El papel de usuario solo necesita el `CLAUDE.md` global, las reglas de `estilo/` y los permisos.
-2. **macOS**: los scripts de `maquina/` y `plugins/dev/scripts/` y el temporizador de las sesiones desatendidas (launchd) están adaptados a macOS y a su bash 3.2, pero todavía no se han probado en un Mac.
+2. **macOS**: `maquina/instalar.sh` ya instala la configuración en un Mac. Los scripts de `plugins/dev/scripts/` y el temporizador de las sesiones desatendidas (launchd) están adaptados a macOS y a su bash 3.2, pero todavía no se han probado en uno.

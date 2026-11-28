@@ -38,11 +38,15 @@ fi
 if [ ${#raices[@]} -eq 0 ]; then raices=("$data"); profundidad=5; else raices+=("$metodo"); profundidad=4; fi
 
 # Repos con origin; .git puede ser un fichero (submódulo). Los contenedores solo locales no tienen
-# origin y se saltan.
+# origin y se saltan, igual que los marcados con `git config metodo.actualizar false` (un proyecto
+# antiguo con el repo archivado).
 repos=()
+excluidos=0
 while IFS= read -r g; do
 	r=$(dirname "$g")
-	git -C "$r" remote get-url origin >/dev/null 2>&1 && repos+=("$r")
+	git -C "$r" remote get-url origin >/dev/null 2>&1 || continue
+	if [ "$(git -C "$r" config --bool metodo.actualizar)" = false ]; then excluidos=$((excluidos + 1)); continue; fi
+	repos+=("$r")
 done < <(find "${raices[@]}" -maxdepth "$profundidad" \
 	\( -name node_modules -o -name .venv -o -name venv \) -prune -o -name .git -print 2>/dev/null | sort -u)
 
@@ -120,5 +124,7 @@ for r in "${repos[@]}"; do
 	fi
 done
 
-echo "${#repos[@]} repos con origin; $al_dia ya al día."
+resumen="${#repos[@]} repos con origin; $al_dia ya al día"
+[ "$excluidos" -eq 0 ] || resumen="$resumen; $excluidos excluidos con metodo.actualizar=false"
+echo "$resumen."
 exit "$atencion"

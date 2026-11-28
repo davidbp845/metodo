@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Instala la configuración global del método en esta máquina: CLAUDE.md, settings.json
-# y hooks de usuario en el directorio de configuración de Claude Code, y el plugin dev@metodo.
+# y hooks de usuario en el directorio de configuración de Claude Code, los comandos de
+# maquina/bin en ~/.local/bin y el plugin dev@metodo.
 # Funciona en Linux, en macOS (con su bash 3.2) y en Git Bash (Windows). Uso en maquina/README.md.
 set -euo pipefail
 
@@ -116,6 +117,12 @@ for h in "$aqui"/hooks/*; do
   cp "$h" "$tmp/hook-$(basename "$h")"
   destinos+=("hook-$(basename "$h"):$config/hooks/$(basename "$h")")
 done
+# Comandos de maquina/bin: en ~/.local/bin va un lanzador, no una copia, para que un pull de
+# Metodo los actualice sin reinstalar.
+for b in "$aqui"/bin/*; do
+  printf '#!/usr/bin/env bash\nexec "%s" "$@"\n' "$b" > "$tmp/bin-$(basename "$b")"
+  destinos+=("bin-$(basename "$b"):$HOME/.local/bin/$(basename "$b")")
+done
 
 sistema=$(uname -s)
 agente="$HOME/Library/LaunchAgents/metodo-desatendido.plist"
@@ -176,7 +183,7 @@ for par in "${destinos[@]}"; do
       echo "Reemplazado (copia en $copia)"
     fi
   fi
-  case "$destino" in "$config"/hooks/*) [ -f "$destino" ] && chmod +x "$destino" ;; esac
+  case "$destino" in "$config"/hooks/*|"$HOME"/.local/bin/*) [ -f "$destino" ] && chmod +x "$destino" ;; esac
 done
 
 # --- Servidores MCP de usuario ---

@@ -7,12 +7,15 @@ Lo que Claude Code lee del directorio de configuración del usuario (`~/.claude`
 | `CLAUDE.plantilla.md` | `<config>/CLAUDE.md` |
 | `settings.plantilla.json` | `<config>/settings.json` |
 | `hooks/*` | `<config>/hooks/*` |
+| `bin/*` | `~/.local/bin/*`, como lanzador que ejecuta el de `bin/` |
 
 El mapa completo de lo que Claude Code lee y escribe en una máquina (configuración de usuario, este repo y cada proyecto) está en `ficheros.md`.
 
 Los hooks de usuario: `git-push-borrar-rama.sh` pide confirmación antes de borrar una rama remota, y `recordar-retro-metodo.sh` avisa al empezar sesión cuando la última retro agregada de `local/retros/` (`/dev:retro-metodo`) tiene 14 días o más, para que tenga cadencia fija sin depender de acordarse.
 
 Las plantillas no llevan rutas de una máquina: `{{DATA}}` es la carpeta que contiene `Metodo` y las carpetas de proyectos, en forma POSIX para las reglas de permisos (`/d/Data` en Git Bash), y `{{DATA_NATIVA}}` la misma carpeta en la forma del sistema para las importaciones `@`, los directorios y el marketplace (`D:/Data`). En Linux las dos coinciden. El script las deduce de dónde está `Metodo`. `{{PROYECTOS}}` es la ruta de las carpetas de proyectos de `metodo-maquina.json` (ver abajo), o `{{DATA_NATIVA}}` si no declara ninguna.
+
+Los comandos de `bin/` se instalan como un lanzador de dos líneas y no como copia: un pull de `Metodo` los pone al día sin reinstalar. `actualizar-repos` trae a esta máquina lo que otra ha subido: hace fetch de todos los repos con `origin` de las carpetas de proyectos y de `Metodo`, avanza con `pull --ff-only` los que están por detrás y sin cambios, y lista sin tocarlos los que tienen commits sin subir, cambios sin commit, ramas divergidas o un fetch fallido. Con `--simular` solo dice qué haría. Se lanza antes de trabajar en una máquina cuando otra ha trabajado en los mismos repos.
 
 ## Instalar en una máquina nueva
 
@@ -21,7 +24,7 @@ Las plantillas no llevan rutas de una máquina: `{{DATA}}` es la carpeta que con
 3. Tener `Metodo` dentro de la carpeta de datos (ver abajo si se comparte con otro sistema).
 4. Desde Git Bash o una terminal: `<carpeta de datos>/Metodo/maquina/instalar.sh`.
 
-El script comprueba las dependencias, crea los ficheros que faltan, registra los servidores MCP de usuario de `metodo-maquina.json` (ver abajo) y el marketplace e instala `dev@metodo`. Si un fichero ya existe y no coincide con la plantilla, enseña el diff y no lo toca.
+El script comprueba las dependencias, crea los ficheros que faltan (también los lanzadores de `bin/` en `~/.local/bin`), registra los servidores MCP de usuario de `metodo-maquina.json` (ver abajo) y el marketplace e instala `dev@metodo`. Si un fichero ya existe y no coincide con la plantilla, enseña el diff y no lo toca.
 
 | Opción | Qué hace |
 |---|---|

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Trae a esta máquina lo que otra ha subido: recorre los repos git de las carpetas de proyectos
+# (las de metodo-maquina.json, o la carpeta de datos entera) y Metodo, hace fetch de todos a la
+# vez y avanza con `pull --ff-only` los que están por detrás y sin cambios. Nunca mezcla, ni
+# rebasa, ni sube: lo que no se puede avanzar sin decidir algo se lista y se deja como está.
+# Vale para macOS y su bash 3.2. instalar.sh lo deja en ~/.local/bin.
+#
+#   actualizar-repos [--simular]
+#
+#   --simular  hace fetch y dice qué haría en cada repo, sin tocar ninguno
+#
+# Sale con 1 si algún repo necesita atención (fetch fallido, cambios sin commit, ramas divergidas).
+set -u
+
+simular=0
+for a in "$@"; do
+	case "$a" in
+	--simular) simular=1 ;;
+	*) sed -n '2,13s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
+	esac
+done
+
+aqui=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+metodo=$(dirname "$(dirname "$aqui")")
+data=$(dirname "$metodo")
+config=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
+
+# Como en desatendido/lanzar.sh: buscar solo en las carpetas declaradas evita barrer las rutas
+# que esa máquina bloquea.
+raices=()
+if [ -f "$config/metodo-maquina.json" ]; then
+	while IFS= read -r c; do raices+=("$data/$c"); done < <(jq -r '.carpetas // [] | .[]' "$config/metodo-maquina.json")
+fi
+if [ ${#raices[@]} -eq 0 ]; then raices=("$data"); profundidad=5; else raices+=("$metodo"); profundidad=4; fi
+
+# Repos con origin; .git puede ser un fichero (submódulo). Los contenedores solo locales no tienen
+# origin y se saltan.
+repos=()
+while IFS= read -r g; do
+	r=$(dirname "$g")
+	git -C "$r" remote get-url origin >/dev/null 2>&1 && repos+=("$r")
+done < <(find "${raices[@]}" -maxdepth "$profundidad" \
+	\( -name node_modules -o -name .venv -o -name venv \) -prune -o -name .git -print 2>/dev/null | sort -u)
+
+[ ${#repos[@]} -gt 0 ] || { echo "No hay repos con origin en: ${raices[*]}"; exit 0; }
+
+# Fetch en paralelo; sin preguntar credenciales, para que un repo sin acceso no se quede esperando.
+tmp=$(mktemp -d)
+trap 'rm -f "$tmp"/*; rmdir "$tmp"' EXIT
+export GIT_TERMINAL_PROMPT=0
+i=0
+for r in "${repos[@]}"; do
+	( git -C "$r" fetch --quiet --prune origin >"$tmp/$i" 2>&1 || echo fallo >>"$tmp/$i.fallo" ) &
+	i=$((i + 1))
+done
+wait
+
+nombre() { case "$1" in "$data"/*) echo "${1#"$data"/}" ;; *) echo "$1" ;; esac; }
+
+atencion=0
+al_dia=0
+i=0
+for r in "${repos[@]}"; do
+	n=$(nombre "$r")
+	if [ -f "$tmp/$i.fallo" ]; then
+		echo "✗ $n: fetch fallido — $(tail -n 1 "$tmp/$i")"
+		atencion=1; i=$((i + 1)); continue
+	fi
+	i=$((i + 1))
+
+	rama=$(git -C "$r" symbolic-ref --quiet --short HEAD) || { echo "· $n: HEAD suelto (submódulo); lo mueve su contenedor"; continue; }
+	arriba=$(git -C "$r" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) || { echo "· $n: $rama sin rama remota"; continue; }
+	set -- $(git -C "$r" rev-list --left-right --count "HEAD...@{u}")
+	delante=$1 detras=$2
+
+	if [ "$detras" -eq 0 ]; then
+		if [ "$delante" -gt 0 ]; then echo "↑ $n: $delante commit(s) sin subir a $arriba"; else al_dia=$((al_dia + 1)); fi
+		continue
+	fi
+	if [ "$delante" -gt 0 ]; then
+		echo "✗ $n: divergido de $arriba ($delante propios, $detras de fuera); se decide a mano"
+		atencion=1; continue
+	fi
+	if [ -n "$(git -C "$r" status --porcelain --untracked-files=no)" ]; then
+		echo "✗ $n: $detras commit(s) por traer, pero hay cambios sin commit; no se toca"
+		atencion=1; continue
+	fi
+	if [ "$simular" = 1 ]; then
+		echo "↓ $n: traería $detras commit(s) de $arriba"
+	elif salida=$(git -C "$r" pull --quiet --ff-only 2>&1); then
+		echo "↓ $n: $detras commit(s) traídos de $arriba"
+	else
+		echo "✗ $n: pull fallido — $(echo "$salida" | tail -n 1)"
+		atencion=1
+	fi
+done
+
+echo "${#repos[@]} repos con origin; $al_dia ya al día."
+exit "$atencion"

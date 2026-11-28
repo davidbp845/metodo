@@ -14,6 +14,7 @@ Se generan desde `maquina/` con `instalar.sh` (ver `README.md`); no se editan a 
 | `<config>/settings.json` | Permisos (`allow`/`ask`/`deny`), hooks y marketplace del método, desde `settings.plantilla.json` |
 | `<config>/metodo-maquina.json` | Carpetas de proyectos, reglas y servidores MCP de usuario de una sola máquina, fuera del repo; las reglas se suman a las de la plantilla y los servidores se registran en `~/.claude.json` |
 | `<config>/hooks/*.sh` | Hooks de usuario, copiados de `maquina/hooks/` |
+| `~/.local/bin/*` (los de `maquina/bin/`) | Lanzadores de los comandos del método, como `actualizar-repos`; ejecutan el script de `maquina/bin/` |
 | `<config>/*.bak-AAAAMMDD-HHMMSS` | Copias que deja `instalar.sh --sobrescribir` |
 | `~/.config/systemd/user/metodo-desatendido.{service,timer}` | Temporizador de las sesiones desatendidas en Linux, desde `maquina/desatendido/` con `instalar.sh --desatendido` |
 | `~/Library/LaunchAgents/metodo-desatendido.plist` | El mismo temporizador en macOS, como agente de launchd; su salida va a `~/Library/Logs/metodo-desatendido.log` |
@@ -73,7 +74,7 @@ Rutas de Linux; en Windows cambian de sitio. Todas las gestiona Claude Code salv
 | `.claude-plugin/marketplace.json` | Hace de `Metodo` un marketplace de plugins |
 | `estilo/redaccion.md`, `estilo/diseno-web.md`, `estilo/proporcion.md` | Reglas de escritura, de maquetación y de esfuerzo, importadas desde el `CLAUDE.md` global |
 | `estilo/obsidian/` | Fragmento CSS común de las bóvedas de Obsidian y cómo activarlo |
-| `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario, `instalar.sh`, las sesiones desatendidas (`desatendido/`) y este mapa |
+| `maquina/` | Plantillas del `CLAUDE.md` global y de `settings.json`, hooks de usuario, `instalar.sh`, los comandos de `bin/`, las sesiones desatendidas (`desatendido/`) y este mapa |
 | `plugins/dev/README.md`, `metodologia.md`, `barridos.md` | Contrato del `## Método`, parte común de la metodología y barridos que recorre `/dev:siguiente` |
 | `plugins/dev/.claude-plugin/plugin.json`, `hooks/hooks.json` | Manifiesto del plugin y sus hooks |
 | `plugins/dev/skills/*/SKILL.md` | Skills del ciclo de desarrollo (`/dev:*`), con sus ficheros de apoyo |

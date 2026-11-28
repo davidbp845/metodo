@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 # Trae a esta máquina lo que otra ha subido: recorre los repos git de las carpetas de proyectos
 # (las de metodo-maquina.json, o la carpeta de datos entera) y Metodo, hace fetch de todos a la
-# vez y avanza con `pull --ff-only` los que están por detrás y sin cambios. Nunca mezcla, ni
-# rebasa, ni sube: lo que no se puede avanzar sin decidir algo se lista y se deja como está.
+# vez y avanza con `pull --ff-only` los que están por detrás y sin cambios; con --subir, también
+# hace push de los que tienen commits sin subir. Nunca mezcla, ni rebasa, ni fuerza: lo que no se
+# puede avanzar sin decidir algo se lista y se deja como está.
 # Vale para macOS y su bash 3.2. instalar.sh lo deja en ~/.local/bin.
 #
-#   actualizar-repos [--simular]
+#   actualizar-repos [--subir] [--simular]
 #
+#   --subir    hace push (sin forzar) de los repos con commits sin subir y sin nada por traer
 #   --simular  hace fetch y dice qué haría en cada repo, sin tocar ninguno
 #
 # Sale con 1 si algún repo necesita atención (fetch fallido, cambios sin commit, ramas divergidas).
 set -u
 
 simular=0
+subir=0
 for a in "$@"; do
 	case "$a" in
 	--simular) simular=1 ;;
-	*) sed -n '2,13s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
+	--subir) subir=1 ;;
+	*) sed -n '2,15s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
 	esac
 done
 
@@ -74,7 +78,18 @@ for r in "${repos[@]}"; do
 	delante=$1 detras=$2
 
 	if [ "$detras" -eq 0 ]; then
-		if [ "$delante" -gt 0 ]; then echo "↑ $n: $delante commit(s) sin subir a $arriba"; else al_dia=$((al_dia + 1)); fi
+		if [ "$delante" -eq 0 ]; then
+			al_dia=$((al_dia + 1))
+		elif [ "$subir" = 0 ]; then
+			echo "↑ $n: $delante commit(s) sin subir a $arriba"
+		elif [ "$simular" = 1 ]; then
+			echo "↑ $n: subiría $delante commit(s) a $arriba"
+		elif salida=$(git -C "$r" push --quiet 2>&1); then
+			echo "↑ $n: $delante commit(s) subidos a $arriba"
+		else
+			echo "✗ $n: push fallido — $(echo "$salida" | tail -n 1)"
+			atencion=1
+		fi
 		continue
 	fi
 	if [ "$delante" -gt 0 ]; then

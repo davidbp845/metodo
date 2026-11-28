@@ -59,6 +59,16 @@ for r in "${repos[@]}"; do
 done
 wait
 
+# La causa de un fallo: la primera línea de error del servidor si la hay (un push rechazado acaba
+# en un "failed to push some refs" que no dice por qué), o la última.
+causa() {
+	local l
+	l=$(printf '%s\n' "$1" | grep -m 1 -E '^remote: (error|fatal)|\[remote rejected\]|\[rejected\]' | sed 's/^remote: //; s/ *$//')
+	[ -n "$l" ] || l=$(printf '%s\n' "$1" | tail -n 1)
+	case "$l" in *GH007*) l="$l (algún commit lleva un correo privado como autor: se reescribe a mano con el noreply)" ;; esac
+	echo "$l"
+}
+
 nombre() { case "$1" in "$data"/*) echo "${1#"$data"/}" ;; *) echo "$1" ;; esac; }
 
 atencion=0
@@ -67,7 +77,7 @@ i=0
 for r in "${repos[@]}"; do
 	n=$(nombre "$r")
 	if [ -f "$tmp/$i.fallo" ]; then
-		echo "✗ $n: fetch fallido — $(tail -n 1 "$tmp/$i")"
+		echo "✗ $n: fetch fallido — $(causa "$(cat "$tmp/$i")")"
 		atencion=1; i=$((i + 1)); continue
 	fi
 	i=$((i + 1))
@@ -87,7 +97,7 @@ for r in "${repos[@]}"; do
 		elif salida=$(git -C "$r" push --quiet 2>&1); then
 			echo "↑ $n: $delante commit(s) subidos a $arriba"
 		else
-			echo "✗ $n: push fallido — $(echo "$salida" | tail -n 1)"
+			echo "✗ $n: push fallido — $(causa "$salida")"
 			atencion=1
 		fi
 		continue
@@ -105,7 +115,7 @@ for r in "${repos[@]}"; do
 	elif salida=$(git -C "$r" pull --quiet --ff-only 2>&1); then
 		echo "↓ $n: $detras commit(s) traídos de $arriba"
 	else
-		echo "✗ $n: pull fallido — $(echo "$salida" | tail -n 1)"
+		echo "✗ $n: pull fallido — $(causa "$salida")"
 		atencion=1
 	fi
 done
